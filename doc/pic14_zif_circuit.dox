@@ -1,0 +1,277 @@
+/*
+ * Copyright (C) 2012 Southern Storm Software, Pty Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/**
+\file mainpage.dox
+\page pic14_zif_circuit Circuit details for 14-bit PIC programmer
+
+This page describes the circuit and construction of a PIC programming
+shield that supports a number of common 14-bit PIC devices, such as the
+PIC16F84, PIC16F84A, PIC16F628A, and PIC12F675.  Other PIC devices that
+run off 5 volts and use a 13 volt programming voltage (VPP) may also
+work with some minor modifications to the circuit, or via an adapter
+cable plugged into the ICSP header.  The programmer has the following
+features:
+
+\li Programming of 8-pin and 18-pin PIC's using an 18-pin ZIF socket
+(the pin count is selected with a jumper).
+\li In-Circuit Serial Programming (ICSP) via a 6-pin header and cable.
+\li Direct control of MCLR/VPP, VDD, DATA, and CLOCK via Arduino output pins.
+\li 13 volt power supply for the VPP programming voltage.
+
+The PIC programmer is built on two shields stacked on top of each other,
+with the 13 volt power supply on the bottom shield and the PIC programming
+circuitry and ZIF socket on the top shield.  A full
+\ref zif_parts_list "parts list" is given at the bottom of this page.
+The following photo shows the fully assembled PIC programmer mounted on
+top of an Arduino Uno compatible main board:
+
+\image html pic14_zif_assembled.jpg
+
+\section zif_power_supply 13 volt power supply
+
+We start with the power supply for the 13 volt programming voltage (VPP).
+In this design we will use an external source of between 15 and 20 volts
+DC as input.  We will use an ordinary 12V voltage regulator with a resistor
+ladder in the output stage to generate the 13 volts we need:
+
+\image html power_supply_circuit.png
+
+The circuit is built on an Arduino prototyping shield, with all of the
+components lying flat so they don't interfere with the main circuit
+board we will be putting on top later.  The following photos show the
+top and bottom of the power supply board:
+
+\image html power_supply_top.jpg
+
+\image html power_supply_bottom.jpg
+
+Note: while the power supply is built on an Arduino prototyping shield,
+it does not connect to any of the Arduino power or I/O pins.  Not even
+the ground pin.  The 13 volt supply could therefore be built into a
+separate enclosure instead of on a shield.
+
+We used a 3.5mm monophonic headphone jack for the external power input,
+glued to the circuit board.  We could have used a DC socket like on the
+Arduino board, but there is a risk that we might accidentally plug the
+high voltage external supply into the Arduino and fry it!  It is therefore
+safer to use a completely different type of input jack.  The 13 volt
+power output cable is secured to the circuit board using nylon fishing line.
+
+The voltage regulator will generate a little bit of heat: every volt
+of input above 15 will generate more heat.  However, the current draw
+from the main board is quite low: less than 1 mA from the PIC and
+less than 20 mA from the red LED.  Modern flash-based PIC's don't use the
+13 volts for anything; they just detect the elevated voltage and then
+go into programming mode.  Older non-flash PIC's may draw more power,
+so more care will be needed for them.  Air-cooling of the regulator
+should be sufficient for the few degrees of temperature that will be
+generated, but if you are paranoid then add a heatsink.  But watch the
+height of the heatsink so you don't short out against the underside of
+the main board!  Alternatively, build the entire supply and heatsink
+into a separate box.
+
+For long-running use, it is recommended that the external power source
+be a 15 volt DC bench power supply running off mains power (most electronics
+stores can sell you such a bench power supply or a kit to build your own).
+An alternative is to use two 9 volt batteries wired in series to
+generate an input of 18 volts.  9 volt batteries don't hold a lot of charge,
+so they may only be suitable for a few hours of use.  But that may be
+enough for casual use if you only program a PIC every few weeks or months.
+The series connection between the two battery clips is insulated and
+secured inside the plug housing:
+
+\image html power_supply_batteries.jpg
+
+This design is not the only way that 13 volts could be generated, but it
+is one of the simplest.  A booster circuit or charge pump could be used
+instead to convert the Arduino's 5 volt supply into 13 volts, but you
+will need to be careful of current draw.  The main reason for the two-board
+design for the PIC programmer was to provide some flexibility in
+VPP generation.  If you come up with a better method, then swap out the
+bottom board and you're good to go.
+
+\section zif_main_board Main programmer circuit board
+
+We now turn our attention to the main circuit board.  The circuit has the
+following features:
+
+\li JP1 receives the 13 volt VPP input from the power supply board.
+\li Red LED that indicates that VPP is available; if the LED is not lit then
+the programmer will not work.
+\li Yellow LED that indicates activity whenever the sketch reads from or
+writes to the PIC.
+\li Transistor Q1 is used to control the VPP supply to the PIC.  When the
+transistor is off (A1 pin is low), 13 volts is applied to the MCLR pin.
+When the transistor is on (A1 pin is high), the MCLR pin is dragged low and
+the PIC resets.
+\li Arduino output D2 is used to directly control VDD to the PIC so that
+it can connect 13 volts to MCLR before applying VDD, as described in the
+PIC programming specifications.  When in programming mode, PIC's should
+only pull a few milliamps, so it should be safe to connect the Arduino
+output directly to the PIC.
+\li JP2 provides a 6-pin ICSP header for connecting to a separate circuit
+board.  Some ICSP connectors are only 5 pins and don't need PGM.  PGM was
+included for boards that support both high-voltage and low-voltage (LVP)
+programming.  PGM is tied to ground to force the use of high-voltage mode.
+\li JP3 is used to select 18-pin or 8-pin operation.  The jumper shunt should
+be placed in position 1-2 for 18-pin PIC's like the PIC16F84 and PIC16F628A,
+or in position 2-3 for 8-pin PIC's like the PIC12F675.
+
+\image html pic14_zif_circuit.png
+
+The circuit is built on an Arduino prototyping shield.  The following photos
+show the top and bottom of the main programmer circuit board.  The soldering
+and wiring is a little messy because I made some mistakes in earlier versions
+of the design and had to correct them (the circuit above is the
+correct verison):
+
+\image html pic14_zif_top.jpg
+
+\image html pic14_zif_bottom.jpg
+
+Modifications may be needed to the circuit for different kinds of PIC's.
+For example, the PIC16F87 and PIC16F88 have PGM on pin 9 instead of pin 10.
+You can either modify your shield, or create an adapter cable that plugs
+into the ICSP header JP2 and remaps the pins appropriately.
+
+\section zif_icsp_only ICSP-only programmer
+
+If you don't need the ZIF socket because you are only going to be using
+ICSP mode, then the circuit can be simplified to the following:
+
+\image html icsp_circuit.png
+
+This circuit is simple enough that you may be able to build both the
+13 volt power supply and the ICSP programmer onto a single shield if you
+arrange the components carefully.  Because a single shield can be
+top-most, there is no need to lay the components flat.  By standing the
+capacitors and voltage regulator upright, you will get more space for
+the other components.
+
+\section zif_testing Testing
+
+The most dangerous part of the programmer circuit is the 13 volt supply.
+If it is accidentally connected to the wrong pin it could fry the Arduino!
+Before proceeding, make sure you check the two circuit boards carefully
+with a multimeter to ensure the following:
+
+\li The positive 13V input should only be connected to the 10K and 1K resistors.
+\li The other end of the 1K resistor should only be connected to the anode of
+the red LED, with the cathode connected to ground.
+\li The other end of the 10K resistor should only be connected to the
+collector of transistor Q1, pin 4 of the ZIF socket, and pin 1 of the
+ICSP header.
+\li There is no short anywhere in the circuit between +13V and ground.
+\li Check the circuit boards for bridged tracks or other problems.
+\li If the leg of a resistor crosses the 5V or GND rail, and isn't supposed
+to be connected to the rail, then make sure there is sufficient clearance
+to not short out against the rail.  This especially applies to the 4.7K
+resistors on pin 10 of the ZIF socket and the base of Q1.
+\li With the power supply board disconnected from the Arduino and the main
+circuit board, apply external power and check that its output is 13 volts.
+
+Next, plug the two boards into the Arduino but do not connect the external
+power supply or put a PIC in the ZIF socket yet.  Upload the ProgramPIC
+sketch to the Arduino, launch the Arduino IDE's Serial Monitor, and set
+the line endings to "Newline".
+
+In the monitor window, type the command
+\ref sect_cmd_version "PROGRAM_PIC_VERSION" (in upper or lower case).
+If all is well, you should see <tt>ProgramPIC 1.0</tt>.  Next, try the
+\ref sect_cmd_help "HELP" and \ref sect_cmd_devices "DEVICES" commands.
+When you issue these commands, the yellow LED should blink briefly.
+This will verify that the sketch is functioning at a minimal level.
+
+The next step is to attach the external power supply and connect the power
+supply board to the main board.  This is the moment of truth.  The red LED
+should light indicating that VPP is active on the main board.
+
+Place a blank PIC in the ZIF socket (a PIC16F628A is recommended),
+and launch the Serial Monitor again.  This time issue the
+\ref sect_cmd_device "DEVICE" command and you should see something like
+the following:
+
+\code
+DeviceID: 1066
+DeviceName: pic16f628a
+ProgramRange: 0000-07FF
+ConfigRange: 2000-2007
+DataRange: 2100-217F
+ConfigWord: 3FFF
+.
+\endcode
+
+Some of the details may be different depending upon the type of PIC
+you have inserted into the ZIF socket.  If you get "ERROR", then there
+is probably something wrong with the connections on the main board
+or the jumper shunt on JP3 is in the wrong position.  Disconnect all power,
+inspect the connections on both boards, and try again.
+
+You should now have a working PIC programmer:
+
+\image html pic14_zif_inuse.jpg
+
+\section zif_parts_list Parts list
+
+Semiconductors:
+
+\li 1 x 3mm red LED
+\li 1 x 3mm yellow LED
+\li 1 x BC548 or equivalent bi-polar NPN transistor
+\li 1 x 7812 voltage regulator
+
+Resistors:
+
+\li 1 x 68 ohm resistor
+\li 1 x 220 ohm resistor
+\li 2 x 1K ohm resistor
+\li 2 x 4.7K ohm resistor
+\li 1 x 10K ohm resistor
+\li Note: can replace the 68 ohm and one of the 1K ohm resistors with 39 ohm
+and 470 ohm respectively if using 1/2 watt resistors.
+
+Capacitors:
+
+\li 1 x 33uF electrolytic capacitor, rated for at least 25 volts
+\li 1 x 0.22uF greencap capacitor
+\li 1 x 0.1uF greencap capacitor
+\li 1 x 100nF ceramic capacitor
+
+Other:
+
+\li 2 x prototyping shield circuit boards
+\li 1 x 18-pin ZIF socket
+\li 1 x 2-pin header socket for 13 volt input to main board
+\li 1 x 2-pin header plug for 13 volt output from power supply board
+\li 1 x 3-pin terminal strip for selecting 8-pin vs 18-pin operation
+\li 1 x 6-pin header socket for ICSP
+\li 1 x jumper shunt
+\li 2 x 6 pin terminal strip
+\li 2 x 8 pin terminal strip
+\li 2 x 6 pin stackable header
+\li 2 x 8 pin stackable header
+\li 1 x 3.5mm monophonic headphone jack
+\li 1 x momentary push button for Arduino reset
+
+External battery-based power supply (optional):
+
+\li 1 x 3.5mm monophonic headphone plug
+\li 2 x 9 volt battery clips
+\li 2 x 9 volt batteries
+
+*/

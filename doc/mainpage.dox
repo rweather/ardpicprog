@@ -19,4 +19,7 @@
 \file mainpage.dox
 \mainpage
 
+\li \ref pic14_zif_circuit "Circuit details for 14-bit PIC programmer".
+\li \ref pic_programming_protocol "Serial protocol for programming PIC's with Arduino".
+
 */

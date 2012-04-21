@@ -17,7 +17,7 @@
 
 /**
 \file protocol.dox
-\page pic_programming_protocol Protocol for programming PIC's with Arduino
+\page pic_programming_protocol Serial protocol for programming PIC's with Arduino
 
 \section sect_protocol_defs Definitions
 
