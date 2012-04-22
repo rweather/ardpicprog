@@ -1,25 +1,59 @@
 /*
  * Copyright (C) 2012 Southern Storm Software, Pty Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * This work is licensed under the Creative Commons Attribution-ShareAlike
+ * 2.5 Generic License. To view a copy of this license, visit
+ * http://creativecommons.org/licenses/by-sa/2.5/ or send a letter
+ * to Creative Commons, 444 Castro Street, Suite 900, Mountain View,
+ * California, 94041, USA.
  */
 
 /**
 \file mainpage.dox
 \mainpage
 
+<img src="pic14_zif_assembled.jpg" width="350" align="right">
+
+Ardpicprog is an <a href="http://www.arduino.cc/">Arduino</a>-based
+solution for programming PIC microcontrollers
+from <a href="http://www.microchip.com">Microchip Technology Inc</a>,
+such as the PIC16F84, PIC16F628A, PIC12F675, etc.  The solution
+has three parts:
+
+\li \ref pic14_zif_circuit "Circuit" that is built on one or more prototyping
+shields to interface to the PIC and provide the 13 volt programming voltage.
+\li Sketch called ProgramPIC that is loaded into an Arduino to directly
+interface with the PIC during programming.  The sketch implements a simple
+\ref pic_programming_protocol "serial protocol" for interfacing with the host.
+\li Host program called \c ardpicprog; a drop-in replacement for
+<a href="http://hyvatti.iki.fi/~jaakko/pic/picprog.html">picprog</a> that
+implements the serial protocol and controls the PIC programming process
+on the computer side.
+
+Note: Ardpicprog is not compatible with JDM-style PIC programmers.
+Those programmers use typically use RS-232 control signals such as DTR
+and CTS to interface to the host computer.  The Arduino has a simple serial
+interface over USB with no access to the RS-232 control signals from
+the host.  Because of this, ardpicprog uses a completely different
+interface between the host and the programmer that runs over a regular
+serial data link.  The host side was deliberately made compatible with
+the picprog tool to make it easier to replace picprog with ardpicprog
+in existing build scripts.
+
+More information about Ardpicprog can be found on the following pages:
+
 \li \ref pic14_zif_circuit "Circuit details for 14-bit PIC programmer".
 \li \ref pic_programming_protocol "Serial protocol for programming PIC's with Arduino".
+
+Ardpicprog's software is distributed under the terms of the
+<a href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">GNU General
+Public License, Version 3</a>.  The circuit diagrams, board layouts,
+and documentation are provided under the terms of the
+<a href="http://creativecommons.org/licenses/by-sa/2.5/">Creative Commons
+Attribution-ShareAlike 2.5</a> license.
+
+For more information on Argpicprog, to report bugs, or to suggest
+improvements, please contact the author Rhys Weatherley via
+<a href="mailto:rhys.weatherley@gmail.com">email</a>.
 
 */
