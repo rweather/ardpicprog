@@ -370,7 +370,7 @@ void cmdDevice(const char *args)
     }
 
     Serial.print("ConfigWord: ");
-    printHex4(userid3);
+    printHex4(configWord);
     Serial.println();
 
     Serial.println(".");
