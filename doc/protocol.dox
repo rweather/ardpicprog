@@ -145,6 +145,7 @@ A line that starts with a period terminates the returned data.
 The following is an example of the output:
 
 \code
+OK
 DeviceID: 1066
 DeviceName: pic16f628a
 ProgramRange: 0000-07FF
@@ -160,8 +161,9 @@ protection is enabled), then the \c DEVICE command will respond
 with a single line containing \c ERROR.
 
 Older PIC's do not report a device identifier.  These will be reported
-as <tt>DeviceID: 0000</tt>.  The \ref sect_cmd_setdevice "SETDEVICE"
-command must be used by the host to manually specify the device type.
+as <tt>DeviceID: 0000</tt> (with exactly 4 zeroes).
+The \ref sect_cmd_setdevice "SETDEVICE" command must be used by
+the host to manually specify the device type.
 
 It is required that this command be used before attempting to
 read or write from the PIC to detect the type of PIC in the
@@ -172,9 +174,9 @@ The following information is provided for all PIC types, including those
 that are not recognized by their device identifier:
 
 \li \c DeviceID presents the raw device identifier of the PIC from
-config memory location 0x2006.  Will be "0000" if there is a PIC in the
-programming socket but it is an older model that does not have a
-device identifier.
+config memory location 0x2006.  Will be "0000" (exactly 4 zeroes)
+if there is a PIC in the programming socket but it is an older model
+that does not have a device identifier.
 \li \c ConfigWord presents the contents of the first configuration word.
 Additional configuration words can be accessed with "READ" once the
 host knows the \c ConfigRange (see below).
@@ -188,14 +190,14 @@ The revision number can be obtained from the low order bits of \c DeviceID.
 program memory; e.g. "0000-07FF" for the PIC16F628A.
 \li \c ProgramBits gives the number of significant bits that are
 used by instructions in program memory.  This field is optional and
-defaults to 14.
+defaults to 14.  Value is in decimal, not hexadecimal.
 \li \c ConfigRange gives the range of flat addresses that comprise
 configuration memory; e.g. "2000-2007".
 \li \c DataRange gives the range of flat addresses that comprise
 EEPROM data memory; e.g. "2100-217F".
 \li \c DataBits gives the number of significant bits that are
 used by locations in data memory.  This field is optional and
-defaults to 8.
+defaults to 8.  Value is in decimal, not hexadecimal.
 \li \c ReservedRange gives the range of flat addresses that comprise
 reserved words that will be preserved by an \ref sect_cmd_erase "ERASE"
 command.  If there is no reserved range of words, then this field will
@@ -210,8 +212,10 @@ non-zero, then the host should report an error along the lines of
 
 If the \c DeviceID is zero (PIC present but identifier not available),
 then the host can use \ref sect_cmd_devices "DEVICES" to obtain a list
-of all supported devices, and then use \ref sect_cmd_setdevice "SETDEVICE"
+of all supported devices, and use \ref sect_cmd_setdevice "SETDEVICE"
 to select a specific device type.
+
+The attribute names and values are case-sensitive unless specified otherwise.
 
 Note: if the device locates config memory somewhere other than 0x2000 in
 flat address space, then the "DEVICE" command will be able to find it
@@ -238,6 +242,7 @@ The command responds with "ERROR" if the device name is not recognized,
 or with a list of device properties otherwise:
 
 \code
+OK
 DeviceName: pic16f84
 ProgramRange: 0000-03FF
 ConfigRange: 2000-2007
@@ -248,10 +253,6 @@ DataRange: 2100-213F
 Any combination of upper and lower case can be used in the device name:
 "PIC16F84" and "Pic16f84" will also match the canonical version, "pic16f84".
 
-There may be other arguments on the \c SETDEVICE command-line, separated
-by spaces.  These arguments are currently ignored but may be used in the
-future to specify additional parameters for a manually-selected device.
-
 \section sect_cmd_devices DEVICES
 
 The \c DEVICES command returns a list of all PIC device names that are
@@ -260,15 +261,16 @@ starting with a period.  White space and newlines in the returned list
 are not significant.  The following is an example output:
 
 \code
-pic12f629, pic12f630, pic12f675, pic12f676, pic16f84*, pic16f84a,
-pic16f87, pic16f88, pic16f627, pic16f627a, pic16f628, pic16f628a,
-pic16f648a
+OK
+pic12f629*, pic12f630*, pic12f675*, pic12f676*, pic16f84, pic16f84a*,
+pic16f87*, pic16f88*, pic16f627*, pic16f627a*, pic16f628*, pic16f628a*,
+pic16f648a*
 .
 \endcode
 
-If a device name ends with an asterisk (*), then that type of device must
-be manually selected using the \ref sect_cmd_setdevice "SETDEVICE" command
-because \ref sect_cmd_device "DEVICE" cannot autodetect it.
+If the name ends with an asterisk (*), then the device can be autodetected
+by \ref sect_cmd_device "DEVICE".  A name without an asterisk can only
+be selected by using \ref sect_cmd_setdevice "SETDEVICE".
 
 \section sect_cmd_read READ
 
@@ -481,9 +483,10 @@ or an incorrect response is received, the host should abort with an error.
 is currently in the programming socket.  Abort if the command responds with
 "ERROR" or the \c DeviceID is non-zero but \c DeviceName is not present.
 \li If \ref sect_cmd_device "DEVICE" returned a \c DeviceID of zero,
+then \ref sect_cmd_setdevice "SETDEVICE" can be used to manually select
+the device.  If \ref sect_cmd_setdevice "SETDEVICE" reports an error,
 then \ref sect_cmd_devices "DEVICES" can be used to fetch the list of
-supported devices.  If the user's selected device is on the list, then
-issue \ref sect_cmd_setdevice "SETDEVICE" to manually select the device.
+supported devices to report an error.
 \li Any number of \ref sect_cmd_read "READ", \ref sect_cmd_readbin "READBIN",
 \ref sect_cmd_write "WRITE", \ref sect_cmd_writebin "WRITEBIN", or
 \ref sect_cmd_erase "ERASE" commands to read or progam the PIC device.

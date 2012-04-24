@@ -335,6 +335,8 @@ void cmdDevice(const char *args)
         deviceId = 0;
     }
 
+    Serial.println("OK");
+
     Serial.print("DeviceID: ");
     printHex4(deviceId);
     Serial.println();
@@ -382,6 +384,7 @@ void cmdDevice(const char *args)
 // DEVICES command.
 void cmdDevices(const char *args)
 {
+    Serial.println("OK");
     int index = 0;
     for (;;) {
         const prog_char *name = (const prog_char *)
@@ -396,8 +399,8 @@ void cmdDevices(const char *args)
                 Serial.print(' ');
         }
         printProgString(name);
-        int id = pgm_read_word(&(devices[index].deviceId));
-        if (id == -1)
+        int id = (int)(pgm_read_word(&(devices[index].deviceId)));
+        if (id != -1)
             Serial.print('*');
         ++index;
     }
@@ -425,6 +428,7 @@ void cmdSetDevice(const char *args)
         if (!name)
             break;
         if (matchString(name, args, len)) {
+            Serial.println("OK");
             initDevice(&(devices[index]));
             Serial.println(".");
             exitProgramMode(); // Force a reset upon the next command.
@@ -887,6 +891,7 @@ const command_t commands[] PROGMEM = {
 // "HELP" command.
 void cmdHelp(const char *args)
 {
+    Serial.println("OK");
     int index = 0;
     for (;;) {
         const prog_char *name = (const prog_char *)

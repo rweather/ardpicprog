@@ -200,6 +200,7 @@ and launch the Serial Monitor again.  This time issue the
 the following:
 
 \code
+OK
 DeviceID: 1066
 DeviceName: pic16f628a
 ProgramRange: 0000-07FF
