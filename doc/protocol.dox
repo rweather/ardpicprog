@@ -452,6 +452,17 @@ preserving these values.  The command will respond with either
 ERASE
 \endcode
 
+If the device has reserved words, then the host can ask that they be
+erased as well by using the \c NOPRESERVE option:
+
+\code
+ERASE NOPRESERVE
+\endcode
+
+If \c NOPRESERVE is given and the device does not have reserved words,
+then the command will act identically to \c ERASE.  The host should only
+use \c NOPRESERVE if it is about to send new data for the reserved words.
+
 \section sect_cmd_pwroff PWROFF
 
 The \c PWROFF command turns off the power to the programming socket.

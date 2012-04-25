@@ -40,8 +40,8 @@ public:
 
     std::string devices();
 
-    bool readData(unsigned long addr, void *data, size_t len);
-    bool writeData(unsigned long addr, const void *data, size_t len);
+    bool readData(unsigned long start, unsigned long end, unsigned short *data);
+    bool writeData(unsigned long start, unsigned long end, const unsigned short *data);
 
     int timeout() const { return timeoutSecs; }
     void setTimeout(int timeout) { timeoutSecs = timeout; }

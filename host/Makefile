@@ -1,10 +1,11 @@
 
 TARGET = ardpicprog
+VERSION = 0.1.0
 
-SOURCES = main.cpp serialport.cpp
-OBJECTS = main.o serialport.o
+SOURCES = hexfile.cpp main.cpp serialport.cpp
+OBJECTS = hexfile.o main.o serialport.o
 
-CXXFLAGS = -g
+CXXFLAGS = -g -Wall -DARDPICPROG_VERSION=\"$(VERSION)\"
 
 LDFLAGS += -g -lstdc++
 
@@ -16,5 +17,6 @@ $(TARGET):	$(OBJECTS)
 clean:
 	rm -f $(TARGET) $(OBJECTS)
 
-main.o: serialport.h
+hexfile.o: hexfile.h serialport.h
+main.o: serialport.h hexfile.h
 serialport.o: serialport.h

@@ -528,7 +528,7 @@ void cmdRead(const char *args)
         printHex4(word);
         ++start;
         ++count;
-        if ((count % 16) == 0) {
+        if ((count % 32) == 0) {
             // Toggle the activity LED to make it blink during long reads.
             activity = !activity;
             if (activity)
@@ -566,7 +566,7 @@ void cmdReadBinary(const char *args)
         }
         ++start;
         ++count;
-        if ((count % 16) == 0) {
+        if ((count % 64) == 0) {
             // Toggle the activity LED to make it blink during long reads.
             activity = !activity;
             if (activity)
@@ -624,7 +624,7 @@ void cmdWrite(const char *args)
             return;
         }
         args += size;
-        if (addr >= limit) {
+        if (addr > limit) {
             // We've reached the limit of this memory area, so fail.
             Serial.println("ERROR");
             return;
@@ -676,6 +676,7 @@ void cmdWriteBinary(const char *args)
         Serial.println("ERROR");
         return;
     }
+    Serial.println("OK");
     int count = 0;
     bool activity = true;
     for (;;) {
@@ -702,7 +703,7 @@ void cmdWriteBinary(const char *args)
 
         // Write the words to memory.
         for (int posn = 0; posn < (len - 1); posn += 2) {
-            if (addr >= limit) {
+            if (addr > limit) {
                 // We've reached the limit of this memory area, so fail.
                 Serial.println("ERROR");
                 return;
@@ -733,12 +734,20 @@ void cmdWriteBinary(const char *args)
     Serial.println("OK");
 }
 
+const char s_noPreserve[] PROGMEM = "NOPRESERVE";
+
 // ERASE command.
 void cmdErase(const char *args)
 {
+    // Was the "NOPRESERVE" option given?
+    int len = 0;
+    while (args[len] != '\0' && args[len] != ' ' && args[len] != '\t')
+        ++len;
+    bool preserve = !matchString(s_noPreserve, args, len);
+
     // Preserve reserved words if necessary.
     unsigned int *reserved = 0;
-    if (reservedStart <= reservedEnd) {
+    if (preserve && reservedStart <= reservedEnd) {
         size_t size = ((size_t)(reservedEnd - reservedStart + 1))
             * sizeof(unsigned int);
         reserved = (unsigned int *)malloc(size);
@@ -815,6 +824,13 @@ void cmdErase(const char *args)
             return;
         }
     }
+
+    // Forcibly write 0x3FFF over the configuration words as erase
+    // sometimes won't reset the words (e.g. PIC16F628A).  If the
+    // write fails, then leave the words as-is - don't report the failure.
+    for (unsigned long configAddr = configStart;
+            configAddr <= configEnd; ++configAddr)
+        writeWord(configAddr, 0x3FFF);
 
     // Done.
     Serial.println("OK");

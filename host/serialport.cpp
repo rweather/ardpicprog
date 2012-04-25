@@ -176,8 +176,10 @@ DeviceInfoMap SerialPort::initDevice(const std::string &deviceName)
 {
     // Try the "DEVICE" command first to auto-detect the type of
     // device that is in the programming socket.
-    if (!command("DEVICE"))
+    if (!command("DEVICE")) {
+        fprintf(stderr, "No device in the programmer or programming voltage is not available.\n");
         return DeviceInfoMap();
+    }
 
     // Fetch the device details.  If we have a DeviceName and it matches,
     // then we are ready to go.  If the DeviceName does not match, then we
@@ -249,67 +251,69 @@ std::string SerialPort::devices()
         return readMultiLineResponse();
 }
 
-static unsigned int readWord(const void *data, int offset)
+// Reads a large block of data using "READBIN".
+bool SerialPort::readData(unsigned long start, unsigned long end, unsigned short *data)
 {
-    const char *d = ((const char *)data) + offset;
-    return (d[0] & 0xFF) | ((d[1] & 0xFF) << 8);
-}
-
-// Reads a large block of data using "READBIN".  The "data" buffer must
-// be at least "len" bytes in length.
-bool SerialPort::readData(unsigned long addr, void *data, size_t len)
-{
-    char buffer[64];
-    sprintf(buffer, "READBIN %04lX-%04lX", addr, addr + len - 1);
+    char buffer[256];
+    sprintf(buffer, "READBIN %04lX-%04lX", start, end);
     if (!command(buffer))
         return false;
-    for (;;) {
+    while (start <= end) {
         int pktlen = readChar();
         if (pktlen < 0)
             return false;
         else if (!pktlen)
             break;
-        if (((size_t)pktlen) <= len) {
-            // Read the next packet.
-            if (!read((char *)data, (size_t)pktlen))
-                return false;
-            data = (void *)(((char *)data) + pktlen);
-            len -= (size_t)pktlen;
-        } else if (len > 0) {
-            // Spurious data on the end of the transfer.  Shouldn't happen.
-            if (!read((char *)data, len))
-                return false;
-            len = 0;
+        if (!read(buffer, (size_t)pktlen))
+            return false;
+        int numWords = pktlen / 2;
+        if (((unsigned long)numWords) > (end - start + 1))
+            numWords = (int)(end - start + 1);
+        for (int index = 0; index < numWords; ++index) {
+            data[index] = (buffer[index * 2] & 0xFF) |
+                          ((buffer[index * 2 + 1] & 0xFF) << 8);
         }
+        data += numWords;
+        start += numWords;
     }
-    return true;
+    return start > end;
 }
 
 // Writes a large block of data using a "WRITEBIN" or "WRITE" command.
-bool SerialPort::writeData(unsigned long addr, const void *data, size_t len)
+bool SerialPort::writeData(unsigned long start, unsigned long end, const unsigned short *data)
 {
-    char buffer[65];
-    if (len == 0x0A) {
+    char buffer[BINARY_TRANSFER_MAX + 1];
+    unsigned long len = (end - start + 1) * 2;
+    unsigned int index;
+    unsigned short word;
+    if (len == 10) {
         // Cannot use "WRITEBIN" for exactly 10 bytes, so use "WRITE" instead.
         sprintf(buffer, "WRITE %04lX %04X %04X %04X %04X %04X",
-                addr, readWord(data, 0), readWord(data, 2),
-                readWord(data, 4), readWord(data, 6), readWord(data, 8));
+                start, data[0], data[1], data[2], data[3], data[4]);
         return command(buffer);
     }
-    sprintf(buffer, "WRITEBIN %04lX", addr);
+    sprintf(buffer, "WRITEBIN %04lX", start);
     if (!command(buffer))
         return false;
     while (len >= BINARY_TRANSFER_MAX) {
         buffer[0] = (char)BINARY_TRANSFER_MAX;
-        ::memcpy(buffer + 1, data, BINARY_TRANSFER_MAX);
+        for (index = 0; index < BINARY_TRANSFER_MAX; index += 2) {
+            word = data[index / 2];
+            buffer[index + 1] = (char)word;
+            buffer[index + 2] = (char)(word >> 8);
+        }
         if (!writePacket(buffer, BINARY_TRANSFER_MAX + 1))
             return false;
-        data = (const void *)(((const char *)data) + BINARY_TRANSFER_MAX);
+        data += BINARY_TRANSFER_MAX / 2;
         len -= BINARY_TRANSFER_MAX;
     }
     if (len > 0) {
         buffer[0] = (char)len;
-        ::memcpy(buffer + 1, data, len);
+        for (index = 0; index < len; index += 2) {
+            word = data[index / 2];
+            buffer[index + 1] = (char)word;
+            buffer[index + 2] = (char)(word >> 8);
+        }
         if (!writePacket(buffer, len + 1))
             return false;
     }
