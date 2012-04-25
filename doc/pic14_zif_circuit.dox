@@ -38,7 +38,7 @@ top of an Arduino Uno compatible main board:
 \section zif_power_supply 13 volt power supply
 
 We start with the power supply for the 13 volt programming voltage (VPP).
-In this design we will use an external source of between 15 and 20 volts
+In this design we will use an external source of between 16 and 20 volts
 DC as input.  We will use an ordinary 12V voltage regulator with a resistor
 ladder in the output stage to generate the 13 volts we need:
 
@@ -66,7 +66,7 @@ safer to use a completely different type of input jack.  The 13 volt
 power output cable is secured to the circuit board using nylon fishing line.
 
 The voltage regulator will generate a little bit of heat: every volt
-of input above 15 will generate more heat.  However, the current draw
+of input above 16 will generate more heat.  However, the current draw
 from the main board is quite low: less than 1 mA from the PIC and
 less than 20 mA from the red LED.  Modern flash-based PIC's don't use the
 13 volts for anything; they just detect the elevated voltage and then
@@ -79,7 +79,7 @@ the main board!  Alternatively, build the entire supply and heatsink
 into a separate box.
 
 For long-running use, it is recommended that the external power source
-be a 15 volt DC bench power supply running off mains power (most electronics
+be a DC bench power supply running off mains power (most electronics
 stores can sell you such a bench power supply or a kit to build your own).
 An alternative is to use two 9 volt batteries wired in series to
 generate an input of 18 volts.  9 volt batteries don't hold a lot of charge,
@@ -228,6 +228,7 @@ Semiconductors:
 \li 1 x 3mm yellow LED
 \li 1 x BC548 or equivalent bi-polar NPN transistor
 \li 1 x 7812 voltage regulator
+\li 1 x IN4004 diode
 
 Resistors:
 
