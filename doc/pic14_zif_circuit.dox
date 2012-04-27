@@ -72,8 +72,8 @@ power output cable is secured to the circuit board using nylon fishing line.
 
 The voltage regulator will generate a little bit of heat: every volt
 of input above 16 will generate more heat.  However, the current draw
-from the main board is quite low: less than 1 mA from the PIC and
-less than 20 mA from the red LED.  Modern flash-based PIC's don't use the
+from the main board is quite low; about 30 mA, mostly for the red LED
+and the power supply itself.  Modern flash-based PIC's don't use the
 13 volts for anything; they just detect the elevated voltage and then
 go into programming mode.  Older non-flash PIC's may draw more power,
 so more care will be needed for them.  Air-cooling of the regulator
