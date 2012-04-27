@@ -1,0 +1,140 @@
+/*
+ * Copyright (C) 2012 Southern Storm Software, Pty Ltd.
+ *
+ * This work is licensed under the Creative Commons Attribution-ShareAlike
+ * 2.5 Generic License. To view a copy of this license, visit
+ * http://creativecommons.org/licenses/by-sa/2.5/ or send a letter
+ * to Creative Commons, 444 Castro Street, Suite 900, Mountain View,
+ * California, 94041, USA.
+ */
+
+/**
+\file supported_devices.dox
+\page supported_devices Supported PIC devices
+
+The following list describes the devices that are currently supported
+by the \ref programpic_sketch "ProgramPIC sketch".  The sketch must be
+used with a circuit that is appropriate for the PIC device in question.
+The \ref pic14_zif_circuit "14-bit PIC programmer" circuit supports
+some of these devices via the ZIF socket and others via the ICSP cable.
+
+The author has personally tested only some of these devices.
+The others on this list are based on information published by
+<a href="http://www.microchip.com">Microchip Technology Inc</a>
+and contained within the source code for
+<a href="http://hyvatti.iki.fi/~jaakko/pic/picprog.html">picprog</a>.
+Patches are welcome to improve the device support.
+
+The following terms are used in the device list:
+
+\par Autodetected
+The device can be automatically detected from its device identifier.
+
+\par Manual
+The device cannot be automatically detected.  The
+\ref host_program "host program" must be supplied the <b>--device</b>
+command-line option to select this device.
+
+\par ZIF, 18-pin
+The device should be programmable using the ZIF socket on the
+\ref pic14_zif_circuit "14-bit PIC programmer" circuit, with the jumper
+shunt on JP3 in the 18-pin position (1-2).  An ICSP cable can also be used.
+
+\par ZIF, 8-pin
+The device should be programmable using the ZIF socket on the
+14-bit PIC programmer circuit, with the jumper shunt on JP3 in the 8-pin
+position (2-3).  An ICSP cable can also be used.
+
+\par ICSP
+The device cannot be placed directly into the ZIF socket on the
+14-bit PIC programmer circuit.  Instead, an ICSP adapter cable
+will be necessary.
+
+<table>
+<tr>
+  <td><b>Device Type</b></td>
+  <td><b>Detection Method</b></td>
+  <td><b>Programming Connector</b></td>
+  <td><b>Notes</b></td>
+</tr>
+<tr>
+  <td>pic12f629</td>
+  <td>Autodetected</td>
+  <td>ZIF, 8-pin</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic12f630</td>
+  <td>Autodetected</td>
+  <td>ZIF, 8-pin</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic12f675</td>
+  <td>Autodetected</td>
+  <td>ZIF, 8-pin</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic12f676</td>
+  <td>Autodetected</td>
+  <td>ZIF, 8-pin</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f84</td>
+  <td>Manual</td>
+  <td>ZIF, 18-pin</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f84a</td>
+  <td>Autodetected</td>
+  <td>ZIF, 18-pin</td>
+  <td>Personally tested by author</td>
+</tr>
+<tr>
+  <td>pic16f87</td>
+  <td>Autodetected</td>
+  <td>ICSP</td>
+  <td>PGM is on pin 9 instead of pin 10</td>
+</tr>
+<tr>
+  <td>pic16f88</td>
+  <td>Autodetected</td>
+  <td>ICSP</td>
+  <td>PGM is on pin 9 instead of pin 10</td>
+</tr>
+<tr>
+  <td>pic16f627</td>
+  <td>Autodetected</td>
+  <td>ZIF, 18-pin</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f627a</td>
+  <td>Autodetected</td>
+  <td>ZIF, 18-pin</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f628</td>
+  <td>Autodetected</td>
+  <td>ZIF, 18-pin</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f628a</td>
+  <td>Autodetected</td>
+  <td>ZIF, 18-pin</td>
+  <td>Personally tested by author</td>
+</tr>
+<tr>
+  <td>pic16f648a</td>
+  <td>Autodetected</td>
+  <td>ZIF, 18-pin</td>
+  <td> </td>
+</tr>
+</table>
+
+*/

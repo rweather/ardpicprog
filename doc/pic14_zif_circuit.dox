@@ -14,11 +14,16 @@
 
 This page describes the circuit and construction of a PIC programmer
 that supports a number of common 14-bit PIC devices, such as the
-PIC16F84, PIC16F84A, PIC16F628A, and PIC12F675.  Other PIC devices that
-run off 5 volts and use a 13 volt programming voltage (VPP) may also
-work with some minor modifications to the circuit, or via an adapter
-cable plugged into the ICSP header.  The programmer has the following
-features:
+PIC16F84, PIC16F84A, PIC16F628A, and PIC12F675.
+
+Other PIC devices that run off 5 volts and use a 13 volt programming voltage
+(VPP) may also work with some minor modifications to the circuit, or via an
+adapter cable plugged into the ICSP header.  See the
+\ref supported_devices "supported device list" for a breakdown as to
+whether the ZIF socket or an ICSP adapter cable must be used with
+each type of device.
+
+The programmer has the following features:
 
 \li Programming of 8-pin and 18-pin PIC's using an 18-pin ZIF socket
 (the pin count is selected with a jumper).

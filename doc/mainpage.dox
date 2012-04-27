@@ -46,6 +46,7 @@ More information about Ardpicprog can be found on the following pages:
 \li \ref pic14_zif_circuit "Circuit details for 14-bit PIC programmer".
 \li \ref programpic_sketch "ProgramPIC sketch for interfacing with the PIC programmer".
 \li \ref host_program "Host program for controlling the PIC programmer".
+\li \ref supported_devices "Supported PIC devices".
 \li \ref pic_programming_protocol "Serial protocol for programming PIC's with Arduino".
 
 Ardpicprog's software is distributed under the terms of the

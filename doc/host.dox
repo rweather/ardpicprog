@@ -54,7 +54,8 @@ e.g. \c pic16f84, \c pic16f628a, etc.  If this option is not present,
 then Ardpicprog will attempt to autodetect the device in the programmer.
 Older PIC devices that do not have an identifier word will need the
 <b>--device</b> option to be specified manually.  The <b>--list-devices</b>
-option can be used to list all supported PIC device types.
+option can be used to list all supported PIC device types.  See also,
+\ref supported_devices "Supported PIC devices".
 
 \par --pic-serial-port PORT, -p PORT
 Specifies the serial port tty device to use to communicate with the
