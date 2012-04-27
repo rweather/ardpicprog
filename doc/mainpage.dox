@@ -22,11 +22,12 @@ has three parts:
 
 \li \ref pic14_zif_circuit "Circuit" that is built on one or more prototyping
 shields to interface to the PIC and provide the 13 volt programming voltage.
-\li Sketch called ProgramPIC that is loaded into an Arduino to directly
-interface with the PIC during programming.  The sketch implements a simple
-\ref pic_programming_protocol "serial protocol" for interfacing with the host.
-\li Host program called \c ardpicprog; a drop-in replacement for
-<a href="http://hyvatti.iki.fi/~jaakko/pic/picprog.html">picprog</a> that
+\li Sketch called \ref programpic_sketch "ProgramPIC" that is loaded into an
+Arduino to directly interface with the PIC during programming.  The sketch
+implements a simple \ref pic_programming_protocol "serial protocol" for
+interfacing with the host.
+\li \ref host_program "Host program" called \c ardpicprog; a drop-in replacement
+for <a href="http://hyvatti.iki.fi/~jaakko/pic/picprog.html">picprog</a> that
 implements the serial protocol and controls the PIC programming process
 on the computer side.
 
@@ -43,6 +44,8 @@ in existing build scripts.
 More information about Ardpicprog can be found on the following pages:
 
 \li \ref pic14_zif_circuit "Circuit details for 14-bit PIC programmer".
+\li \ref programpic_sketch "ProgramPIC sketch for interfacing with the PIC programmer".
+\li \ref host_program "Host program for controlling the PIC programmer".
 \li \ref pic_programming_protocol "Serial protocol for programming PIC's with Arduino".
 
 Ardpicprog's software is distributed under the terms of the
@@ -52,7 +55,7 @@ and documentation are provided under the terms of the
 <a href="http://creativecommons.org/licenses/by-sa/2.5/">Creative Commons
 Attribution-ShareAlike 2.5</a> license.
 
-For more information on Argpicprog, to report bugs, or to suggest
+For more information on Ardpicprog, to report bugs, or to suggest
 improvements, please contact the author Rhys Weatherley via
 <a href="mailto:rhys.weatherley@gmail.com">email</a>.
 

@@ -312,10 +312,10 @@ int main(int argc, char *argv[])
 static void usage(const char *argv0)
 {
     fprintf(stderr, "Usage: %s --quiet -q --warranty --copying --help -h\n", argv0);
-    fprintf(stderr, "    --device pictype -d pictype --pic-serial-port device -p device\n");
-    fprintf(stderr, "    --input-hexfile path -i path --output-hexfile path -o path\n");
-    fprintf(stderr, "    --ihx8m --ihx16 --ihx32 --cc-hexfile path -c path --skip-ones\n");
-    fprintf(stderr, "    --erase --burn --force-calibration --list-devices --speed speed\n");
+    fprintf(stderr, "    --device DEVTYPE -d DEVTYPE --pic-serial-port PORT -p PORT\n");
+    fprintf(stderr, "    --input-hexfile INPUT -i INPUT --output-hexfile OUTPUT -o OUTPUT\n");
+    fprintf(stderr, "    --ihx8m --ihx16 --ihx32 --cc-hexfile CCFILE -c CCFILE --skip-ones\n");
+    fprintf(stderr, "    --erase --burn --force-calibration --list-devices --speed SPEED\n");
 }
 
 static void header()
