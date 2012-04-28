@@ -43,6 +43,7 @@ in existing build scripts.
 
 More information about Ardpicprog can be found on the following pages:
 
+\li \ref installation "Installation instructions".
 \li \ref pic14_zif_circuit "Circuit details for 14-bit PIC programmer".
 \li \ref programpic_sketch "ProgramPIC sketch for interfacing with the PIC programmer".
 \li \ref host_program "Host program for controlling the PIC programmer".
@@ -58,6 +59,7 @@ Attribution-ShareAlike 2.5</a> license.
 
 For more information on Ardpicprog, to report bugs, or to suggest
 improvements, please contact the author Rhys Weatherley via
-<a href="mailto:rhys.weatherley@gmail.com">email</a>.
+<a href="mailto:rhys.weatherley@gmail.com">email</a>.  Patches to support
+new device types are very welcome.
 
 */
