@@ -243,17 +243,19 @@ bool HexFile::read(SerialPort *port)
     } else {
         printf("skipped reading data memory,\n");
     }
-    printf("reading id words and fuses,\n");  // Done in one hit.
-    if (!readBlock(port, _configStart, _configEnd))
-        return false;
+    if (_configStart <= _configEnd) {
+        printf("reading id words and fuses,\n");  // Done in one hit.
+        if (!readBlock(port, _configStart, _configEnd))
+            return false;
+    } else {
+        printf("skipped reading id words and fuses,\n");
+    }
     printf("done.\n");
     return true;
 }
 
 bool HexFile::readBlock(SerialPort *port, Address start, Address end)
 {
-    if (start > end)
-        return true;        // Range doesn't exist on device, which is OK.
     HexFileBlock block;
     block.address = start;
     block.data.resize(std::vector<unsigned short>::size_type(end - start + 1));
@@ -292,7 +294,7 @@ bool HexFile::write(SerialPort *port, bool forceCalibration)
     }
 
     // Write data memory before config memory in case the configuration
-    // word turns on data protection and thus hinder data verification.
+    // word turns on data protection and thus hinders data verification.
     if (_dataStart <= _dataEnd) {
         printf("burning data memory,");
         fflush(stdout);
@@ -310,15 +312,16 @@ bool HexFile::write(SerialPort *port, bool forceCalibration)
         if (!writeBlock(port, _configStart, _configEnd))
             return false;
         reportCount();
+    } else {
+        printf("skipped burning id words and fuses,");
     }
+
     printf("done.\n");
     return true;
 }
 
 bool HexFile::writeBlock(SerialPort *port, Address start, Address end)
 {
-    if (start > end)
-        return true;
     std::vector<HexFileBlock>::const_iterator it;
     for (it = blocks.begin(); it != blocks.end(); ++it) {
         Address blockStart = (*it).address;

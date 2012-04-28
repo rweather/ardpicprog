@@ -33,9 +33,9 @@ static struct option long_options[] = {
     {"erase", no_argument, 0, 'e'},
     {"force-calibration", no_argument, 0, 'f'},
     {"help", no_argument, 0, 'h'},
-    {"ihx8m", no_argument, 0, '0'},
-    {"ihx16", no_argument, 0, '1'},
-    {"ihx32", no_argument, 0, '2'},
+    {"ihx8m", no_argument, 0, FORMAT_IHX8M},
+    {"ihx16", no_argument, 0, FORMAT_IHX16},
+    {"ihx32", no_argument, 0, FORMAT_IHX32},
     {"input-hexfile", required_argument, 0, 'i'},
     {"output-hexfile", required_argument, 0, 'o'},
     {"pic-serial-port", required_argument, 0, 'p'},
@@ -104,9 +104,11 @@ int main(int argc, char *argv[])
     while ((opt = getopt_long(argc, argv, "c:d:hi:o:p:q",
                               long_options, 0)) != -1) {
         switch (opt) {
-        case '0': case '1': case '2':
+        case FORMAT_IHX8M:
+        case FORMAT_IHX16:
+        case FORMAT_IHX32:
             // Set the hexfile format: IHX8M, IHX16, or IHX32.
-            opt_format = opt - '0';
+            opt_format = opt;
             break;
         case 'b':
             // Burn the PIC.
