@@ -54,12 +54,12 @@ Suppress the copyright header.
 
 \par --device DEVTYPE, -d DEVTYPE
 Specifies the type of PIC device that is in the programmer;
-e.g. \c pic16f84, \c pic16f628a, etc.  If this option is not present,
-then Ardpicprog will attempt to autodetect the device in the programmer.
-Older PIC devices that do not have an identifier word will need the
-<b>--device</b> option to be specified manually.  The <b>--list-devices</b>
-option can be used to list all supported PIC device types.  See also,
-\ref supported_devices "Supported PIC devices".
+e.g. \c pic16f84, \c pic16f628a, etc.  If this option is not present or it
+is set to <b>auto</b>, then Ardpicprog will attempt to autodetect the
+device in the programmer.  Older PIC devices that do not have an identifier
+word will need the <b>--device</b> option to be specified manually.
+The <b>--list-devices</b> option can be used to list all supported PIC
+device types.  See also, \ref supported_devices "Supported PIC devices".
 
 \par --pic-serial-port PORT, -p PORT
 Specifies the serial port tty device to use to communicate with the
@@ -157,6 +157,17 @@ picprog, but are ignored by Ardpicprog:
 \par --rdtsc
 \par --reboot
 \par --slow
+
+\section host_environment Environment
+
+\par PIC_DEVICE
+PIC device to read or burn.  Defaults to autodetection of the PIC device type.
+The <b>--device</b> option overrides this environment variable.
+
+\par PIC_PORT
+Specifies the serial port tty device to use to communicate with the
+programmer.  The default is <tt>/dev/ttyACM0</tt>.  The <b>--pic-serial-port</b>
+option overrides this environment variable.
 
 \section host_exit Exit values
 
