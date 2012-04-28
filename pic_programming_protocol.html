@@ -118,6 +118,7 @@ ConfigWord: 3FFF
 <li><code>ProgramRange</code> gives the range of flat addresses that comprise program memory; e.g. "0000-07FF" for the PIC16F628A. </li>
 <li><code>ProgramBits</code> gives the number of significant bits that are used by instructions in program memory. This field is optional and defaults to 14. Value is in decimal, not hexadecimal. </li>
 <li><code>ConfigRange</code> gives the range of flat addresses that comprise configuration memory; e.g. "2000-2007". </li>
+<li><code>ConfigSave</code> is a mask that specifies which bits in the configuration word will be automatically saved by <a class="el" href="pic_programming_protocol.html#sect_cmd_erase">ERASE</a> and <a class="el" href="pic_programming_protocol.html#sect_cmd_write">WRITE</a> because they contain calibration data. This field is optional and defaults to 0. </li>
 <li><code>DataRange</code> gives the range of flat addresses that comprise EEPROM data memory; e.g. "2100-217F". </li>
 <li><code>DataBits</code> gives the number of significant bits that are used by locations in data memory. This field is optional and defaults to 8. Value is in decimal, not hexadecimal. </li>
 <li><code>ReservedRange</code> gives the range of flat addresses that comprise reserved words that will be preserved by an <a class="el" href="pic_programming_protocol.html#sect_cmd_erase">ERASE</a> command. If there is no reserved range of words, then this field will not be present.</li>
@@ -259,7 +260,7 @@ Recommended sequence of commands</h2>
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Sat Apr 28 2012 13:04:24 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Sat Apr 28 2012 15:21:24 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>
