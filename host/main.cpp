@@ -323,7 +323,7 @@ static void usage(const char *argv0)
 
 static void header()
 {
-    fprintf(stderr, "Argpicprog version %s, Copyright (c) 2012 Southern Storm Pty Ltd.\n", ARDPICPROG_VERSION);
+    fprintf(stderr, "Ardpicprog version %s, Copyright (c) 2012 Southern Storm Pty Ltd.\n", ARDPICPROG_VERSION);
     fprintf(stderr, "Ardpicprog comes with ABSOLUTELY NO WARRANTY; for details\n");
     fprintf(stderr, "type `ardpicprog --warranty'.  This is free software,\n");
     fprintf(stderr, "and you are welcome to redistribute it under certain conditions;\n");
