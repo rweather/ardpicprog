@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Ardpicprog: Related Pages</title>
+<title>Ardpicprog: Installation instructions for Ardpicprog</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
@@ -50,24 +50,25 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="headertitle">
-<div class="title">Related Pages</div>  </div>
+<div class="title">Installation instructions for Ardpicprog </div>  </div>
 </div>
 <div class="contents">
-<div class="textblock">Here is a list of all related documentation pages:</div><ul>
-<li><a class="el" href="host_program.html">Host program for controlling the PIC programmer</a>
-</li>
-<li><a class="el" href="installation.html">Installation instructions for Ardpicprog</a>
-</li>
-<li><a class="el" href="pic14_zif_circuit.html">Circuit details for 14-bit PIC programmer</a>
-</li>
-<li><a class="el" href="programpic_sketch.html">ProgramPIC sketch</a>
-</li>
-<li><a class="el" href="pic_programming_protocol.html">Serial protocol for programming PIC's with Arduino</a>
-</li>
-<li><a class="el" href="supported_devices.html">Supported PIC devices</a>
-</li>
-</ul>
-</div>
+<div class="textblock"><p>The source code for Ardpicprog is available from github: <a href="https://github.com/rweather/ardpicprog">https://github.com/rweather/ardpicprog</a>. There are two main parts to the source: the <a class="el" href="host_program.html">ardpicprog host program</a> and the <a class="el" href="programpic_sketch.html">ProgramPIC sketch</a>.</p>
+<p>The host program can be built on GNU/Linux and other POSIX-compatible systems by typing <code>make</code>. Then copy the <code>ardpicprog</code> binary from the <code>host</code> directory to somewhere on your PATH.</p>
+<p>The ProgramPIC sketch should be uploaded to an Arduino Uno compatible board that has an appropriate <a class="el" href="pic14_zif_circuit.html">PIC programming shield</a> attached to it.</p>
+<p>To test that the host can talk to the PIC programmer, plug the Arduino into the host computer, shut down the Serial Monitor window in the Arduino IDE, and type the following on the host (the port may be different on your machine):</p>
+<div class="fragment"><pre class="fragment">ardpicprog -p /dev/ttyACM0 --list-devices
+</pre></div><p>You should see a list of supported devices like the following:</p>
+<div class="fragment"><pre class="fragment">Supported devices:
+pic12f629*, pic12f630*, pic12f675*, pic12f676*, pic16f84, pic16f84a*,
+pic16f87*, pic16f88*, pic16f627*, pic16f627a*, pic16f628*, pic16f628a*,
+pic16f648a*
+ = autodetected
+</pre></div><p>Next, put a <a class="el" href="supported_devices.html">compatible</a> PIC device into the programming socket, ensure that the 13 volt programming voltage is applied, and then type the following:</p>
+<div class="fragment"><pre class="fragment">ardpicprog -p /dev/ttyACM0 -o output.hex --skip-ones
+</pre></div><p>That should dump the entire contents of the PIC device to the file <code>output.hex</code>.</p>
+<p>See the documentation for the <a class="el" href="host_program.html">host program</a> for more information on using Ardpicprog to read and burn PIC's. </p>
+</div></div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
