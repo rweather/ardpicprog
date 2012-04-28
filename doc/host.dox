@@ -22,7 +22,7 @@ with <a href="http://hyvatti.iki.fi/~jaakko/pic/picprog.html">picprog</a>
 to make it easy to replace invocations of picprog in existing Makefile's
 and build scripts.
 
-Note: the host program does not implement any specific logic for
+The host program does not implement any specific logic for
 programming PIC devices.  It merely communicates with a sketch running on
 the Arduino via a serial port and asks it to perform
 \ref sect_cmd_read "READ", \ref sect_cmd_write "WRITE",
@@ -32,6 +32,10 @@ new PIC device type, the sketch will need to be replaced with an alternative
 that is familiar with the low-level programming details of the new device.
 The \ref pic14_zif_circuit "circuit" for the PIC programmer shield may
 also need to be modified.
+
+Note: the Serial Monitor in the Arduino IDE should be closed while Ardpicprog
+is in use.  Otherwise the monitor may steal some of the serial data that
+was intended for Ardpicprog and the reading or burning process will fail.
 
 \section host_usage Usage
 
