@@ -727,7 +727,7 @@ void cmdWriteBinary(const char *args)
             }
             ++addr;
             ++count;
-            if ((count % 16) == 0) {
+            if ((count % 24) == 0) {
                 // Toggle the activity LED to make it blink during long writes.
                 activity = !activity;
                 if (activity)
