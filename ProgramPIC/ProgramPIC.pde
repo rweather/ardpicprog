@@ -79,6 +79,7 @@ unsigned long dataStart     = 0x2100;
 unsigned long dataEnd       = 0x217F;
 unsigned long reservedStart = 0x0800;
 unsigned long reservedEnd   = 0x07FF;
+unsigned int  configSave    = 0x0000;
 byte progFlashType          = FLASH4;
 byte dataFlashType          = EEPROM;
 
@@ -110,32 +111,33 @@ struct deviceInfo
     prog_uint16_t configSize;   // Number of configuration words.
     prog_uint16_t dataSize;     // Size of EEPROM data memory (bytes).
     prog_uint16_t reservedWords;// Reserved program words (e.g. for OSCCAL).
+    prog_uint16_t configSave;   // Bits in config word to be saved.
     prog_uint8_t progFlashType; // Type of flash for program memory.
     prog_uint8_t dataFlashType; // Type of flash for data memory.
 
 };
 struct deviceInfo const devices[] PROGMEM = {
     // http://ww1.microchip.com/downloads/en/DeviceDoc/41191D.pdf
-    {s_pic12f629,  0x0F80, 1024, 0x2000, 0x2100, 8, 128, 1, FLASH4, EEPROM},
-    {s_pic12f630,  0x10C0, 1024, 0x2000, 0x2100, 8, 128, 1, FLASH4, EEPROM},
-    {s_pic12f675,  0x0FC0, 1024, 0x2000, 0x2100, 8, 128, 1, FLASH4, EEPROM},
-    {s_pic12f676,  0x10E0, 1024, 0x2000, 0x2100, 8, 128, 1, FLASH4, EEPROM},
+    {s_pic12f629,  0x0F80, 1024, 0x2000, 0x2100, 8, 128, 1, 0x3000, FLASH4, EEPROM},
+    {s_pic12f630,  0x10C0, 1024, 0x2000, 0x2100, 8, 128, 1, 0x3000, FLASH4, EEPROM},
+    {s_pic12f675,  0x0FC0, 1024, 0x2000, 0x2100, 8, 128, 1, 0x3000, FLASH4, EEPROM},
+    {s_pic12f676,  0x10E0, 1024, 0x2000, 0x2100, 8, 128, 1, 0x3000, FLASH4, EEPROM},
 
     // http://ww1.microchip.com/downloads/en/DeviceDoc/30262e.pdf
-    {s_pic16f84,   -1,     1024, 0x2000, 0x2100, 8,  64, 0, FLASH,  EEPROM},
-    {s_pic16f84a,  0x0560, 1024, 0x2000, 0x2100, 8,  64, 0, FLASH,  EEPROM},
+    {s_pic16f84,   -1,     1024, 0x2000, 0x2100, 8,  64, 0, 0, FLASH,  EEPROM},
+    {s_pic16f84a,  0x0560, 1024, 0x2000, 0x2100, 8,  64, 0, 0, FLASH,  EEPROM},
 
     // http://ww1.microchip.com/downloads/en/DeviceDoc/39607c.pdf
-    {s_pic16f87,   0x0720, 4096, 0x2000, 0x2100, 9, 256, 0, FLASH5, EEPROM},
-    {s_pic16f88,   0x0760, 4096, 0x2000, 0x2100, 9, 256, 0, FLASH5, EEPROM},
+    {s_pic16f87,   0x0720, 4096, 0x2000, 0x2100, 9, 256, 0, 0, FLASH5, EEPROM},
+    {s_pic16f88,   0x0760, 4096, 0x2000, 0x2100, 9, 256, 0, 0, FLASH5, EEPROM},
 
     // 627/628:  http://ww1.microchip.com/downloads/en/DeviceDoc/30034d.pdf
     // A series: http://ww1.microchip.com/downloads/en/DeviceDoc/41196g.pdf
-    {s_pic16f627,  0x07A0, 1024, 0x2000, 0x2100, 8, 128, 0, FLASH,  EEPROM},
-    {s_pic16f627a, 0x1040, 1024, 0x2000, 0x2100, 8, 128, 0, FLASH4, EEPROM},
-    {s_pic16f628,  0x07C0, 2048, 0x2000, 0x2100, 8, 128, 0, FLASH,  EEPROM},
-    {s_pic16f628a, 0x1060, 2048, 0x2000, 0x2100, 8, 128, 0, FLASH4, EEPROM},
-    {s_pic16f648a, 0x1100, 4096, 0x2000, 0x2100, 8, 128, 0, FLASH4, EEPROM},
+    {s_pic16f627,  0x07A0, 1024, 0x2000, 0x2100, 8, 128, 0, 0, FLASH,  EEPROM},
+    {s_pic16f627a, 0x1040, 1024, 0x2000, 0x2100, 8, 128, 0, 0, FLASH4, EEPROM},
+    {s_pic16f628,  0x07C0, 2048, 0x2000, 0x2100, 8, 128, 0, 0, FLASH,  EEPROM},
+    {s_pic16f628a, 0x1060, 2048, 0x2000, 0x2100, 8, 128, 0, 0, FLASH4, EEPROM},
+    {s_pic16f648a, 0x1100, 4096, 0x2000, 0x2100, 8, 256, 0, 0, FLASH4, EEPROM},
 
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
@@ -257,6 +259,7 @@ void initDevice(const struct deviceInfo *dev)
     dataEnd = dataStart + pgm_read_word(&(dev->dataSize)) - 1;
     reservedStart = programEnd - pgm_read_word(&(dev->reservedWords)) + 1;
     reservedEnd = programEnd;
+    configSave = pgm_read_word(&(dev->configSave));
     progFlashType = pgm_read_byte(&(dev->progFlashType));
     dataFlashType = pgm_read_byte(&(dev->dataFlashType));
 
@@ -272,6 +275,11 @@ void initDevice(const struct deviceInfo *dev)
     Serial.print('-');
     printHex8(configEnd);
     Serial.println();
+    if (configSave != 0) {
+        Serial.print("ConfigSave: ");
+        printHex4(configSave);
+        Serial.println();
+    }
     Serial.print("DataRange: ");
     printHex8(dataStart);
     Serial.print('-');
@@ -367,6 +375,7 @@ void cmdDevice(const char *args)
         dataEnd       = 0x217F;
         reservedStart = 0x0800;
         reservedEnd   = 0x07FF;
+        configSave    = 0x0000;
         progFlashType = FLASH4;
         dataFlashType = EEPROM;
     }
@@ -747,6 +756,7 @@ void cmdErase(const char *args)
 
     // Preserve reserved words if necessary.
     unsigned int *reserved = 0;
+    unsigned int configWord = 0x3FFF;
     if (preserve && reservedStart <= reservedEnd) {
         size_t size = ((size_t)(reservedEnd - reservedStart + 1))
             * sizeof(unsigned int);
@@ -764,6 +774,14 @@ void cmdErase(const char *args)
             Serial.println("ERROR");
             return;
         }
+    }
+    if (configSave != 0) {
+        // Some of the bits in the configuration word must also be saved.
+        // We always preserve these, even if NOPRESERVE is given because of
+        // the check in writeWord() that prevents new bits from ever
+        // being written to the preserved bits in the configuration word.
+        configWord &= ~configSave;
+        configWord |= readWord(configStart + DEV_CONFIG_WORD) & configSave;
     }
 
     // Perform the memory type specific erase sequence.
@@ -828,9 +846,9 @@ void cmdErase(const char *args)
     // Forcibly write 0x3FFF over the configuration words as erase
     // sometimes won't reset the words (e.g. PIC16F628A).  If the
     // write fails, then leave the words as-is - don't report the failure.
-    for (unsigned long configAddr = configStart;
+    for (unsigned long configAddr = configStart + DEV_CONFIG_WORD;
             configAddr <= configEnd; ++configAddr)
-        writeWord(configAddr, 0x3FFF);
+        writeWord(configAddr, configWord);
 
     // Done.
     Serial.println("OK");
@@ -1250,8 +1268,18 @@ bool writeWord(unsigned long addr, unsigned int word)
         beginProgramCycle(addr, true);
         readBack = sendReadCommand(CMD_READ_DATA_MEMORY);
         readBack = (readBack >> 1) & 0x00FF;
-    } else {
+    } else if (!configSave || addr != (configStart + DEV_CONFIG_WORD)) {
         word &= 0x3FFF;
+        sendWriteCommand(CMD_LOAD_PROGRAM_MEMORY, word << 1);
+        beginProgramCycle(addr, false);
+        readBack = sendReadCommand(CMD_READ_PROGRAM_MEMORY);
+        readBack = (readBack >> 1) & 0x3FFF;
+    } else {
+        // The configuration word has calibration bits within it that
+        // must be preserved when we write to it.  Read the current value
+        // and preserve the necessary bits.
+        readBack = (sendReadCommand(CMD_READ_PROGRAM_MEMORY) >> 1) & 0x3FFF;
+        word = (readBack & configSave) | (word & 0x3FFF & ~configSave);
         sendWriteCommand(CMD_LOAD_PROGRAM_MEMORY, word << 1);
         beginProgramCycle(addr, false);
         readBack = sendReadCommand(CMD_READ_PROGRAM_MEMORY);

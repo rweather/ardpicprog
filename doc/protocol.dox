@@ -193,6 +193,10 @@ used by instructions in program memory.  This field is optional and
 defaults to 14.  Value is in decimal, not hexadecimal.
 \li \c ConfigRange gives the range of flat addresses that comprise
 configuration memory; e.g. "2000-2007".
+\li \c ConfigSave is a mask that specifies which bits in the configuration
+word will be automatically saved by \ref sect_cmd_erase "ERASE" and
+\ref sect_cmd_write "WRITE" because they contain calibration data.
+This field is optional and defaults to 0.
 \li \c DataRange gives the range of flat addresses that comprise
 EEPROM data memory; e.g. "2100-217F".
 \li \c DataBits gives the number of significant bits that are
