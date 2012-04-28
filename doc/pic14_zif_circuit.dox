@@ -242,8 +242,6 @@ Resistors:
 \li 2 x 1K ohm resistor
 \li 2 x 4.7K ohm resistor
 \li 1 x 10K ohm resistor
-\li Note: can replace the 68 ohm and one of the 1K ohm resistors with 39 ohm
-and 470 ohm respectively if using 1/2 watt resistors.
 
 Capacitors:
 
