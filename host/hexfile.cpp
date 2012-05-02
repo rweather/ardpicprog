@@ -259,7 +259,7 @@ bool HexFile::readBlock(SerialPort *port, Address start, Address end)
     HexFileBlock block;
     block.address = start;
     block.data.resize(std::vector<unsigned short>::size_type(end - start + 1));
-    if (!port->readData(start, end, block.data.data()))
+    if (!port->readData(start, end, &(block.data.at(0))))
         return false;
     std::vector<HexFileBlock>::iterator it;
     for (it = blocks.begin(); it != blocks.end(); ++it) {
@@ -327,7 +327,7 @@ bool HexFile::writeBlock(SerialPort *port, Address start, Address end)
         Address blockStart = (*it).address;
         Address blockEnd = blockStart + (*it).data.size() - 1;
         if (start <= blockEnd && end >= blockStart) {
-            const unsigned short *data = (*it).data.data();
+            const unsigned short *data = &((*it).data.at(0));
             Address overlapStart;
             Address overlapEnd;
             if (start > blockStart) {
@@ -395,7 +395,7 @@ bool HexFile::load(FILE *file)
                     // Not enough bytes to form a valid line.
                     break;
                 }
-                if ((line[0] & 0xFF) != (line.size() - 5)) {
+                if ((line[0] & 0xFF) != (int)(line.size() - 5)) {
                     // Size value is incorrect.
                     break;
                 }

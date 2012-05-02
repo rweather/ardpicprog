@@ -63,7 +63,8 @@ device types.  See also, \ref supported_devices "Supported PIC devices".
 
 \par --pic-serial-port PORT, -p PORT
 Specifies the serial port tty device to use to communicate with the
-programmer.  The default is <tt>/dev/ttyACM0</tt>.
+programmer.  The default is <tt>/dev/ttyACM0</tt> under POSIX systems
+and <tt>COM1</tt> under Windows.
 
 \par --speed SPEED
 Specifies the speed of the serial connection to the programmer.
@@ -166,7 +167,8 @@ The <b>--device</b> option overrides this environment variable.
 
 \par PIC_PORT
 Specifies the serial port tty device to use to communicate with the
-programmer.  The default is <tt>/dev/ttyACM0</tt>.  The <b>--pic-serial-port</b>
+programmer.  The default is <tt>/dev/ttyACM0</tt> under POSIX systems and
+<tt>COM1</tt> under Windows.  The <b>--pic-serial-port</b>
 option overrides this environment variable.
 
 \section host_exit Exit values

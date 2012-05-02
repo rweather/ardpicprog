@@ -1,6 +1,6 @@
 
 TARGET = ardpicprog
-VERSION = 0.1.0
+VERSION = 0.1.1
 
 SOURCES = hexfile.cpp main.cpp serialport.cpp serialport_posix.cpp
 OBJECTS = hexfile.o main.o serialport.o serialport_posix.o

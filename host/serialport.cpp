@@ -114,8 +114,6 @@ DeviceInfoMap SerialPort::initDevice(const std::string &deviceName)
 // Returns false if the response is "ERROR" or a timeout occurred.
 bool SerialPort::command(const std::string &cmd)
 {
-    if (fd == -1)
-        return false;
     std::string line = cmd;
     line += '\n';
     write(line.c_str(), line.length());

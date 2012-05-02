@@ -23,6 +23,7 @@
 #include <stddef.h>
 #ifdef _WIN32
 #define	SERIAL_WIN32	1
+#include <windows.h>
 #else
 #define	SERIAL_POSIX	1
 #include <termios.h>
@@ -55,6 +56,11 @@ private:
 #ifdef SERIAL_POSIX
     int fd;
     struct termios prevParams;
+#endif
+#ifdef SERIAL_WIN32
+    HANDLE handle;
+    COMMTIMEOUTS timeouts;
+    int lastTimeoutSecs;
 #endif
     char buffer[1024];
     int buflen;

@@ -73,7 +73,13 @@ bool opt_list_devices = false;
 int opt_speed = 9600;
 
 #ifndef DEFAULT_PIC_PORT
+#ifdef SERIAL_WIN32
+#define DEFAULT_PIC_PORT    "COM1"
+#elif defined(__CYGWIN__)
+#define DEFAULT_PIC_PORT    "/dev/com1"
+#else
 #define DEFAULT_PIC_PORT    "/dev/ttyACM0"
+#endif
 #endif
 
 // Exit codes for compatibility with picprog.
@@ -101,6 +107,8 @@ int main(int argc, char *argv[])
         opt_port = env;
     if (opt_port.empty())
         opt_port = DEFAULT_PIC_PORT;
+fputs(opt_port.c_str(), stderr);
+fputs("\n", stderr);
     while ((opt = getopt_long(argc, argv, "c:d:hi:o:p:q",
                               long_options, 0)) != -1) {
         switch (opt) {

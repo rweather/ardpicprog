@@ -18,8 +18,10 @@ The source code for Ardpicprog is available from github:
 \ref programpic_sketch "ProgramPIC sketch".
 
 The host program can be built on GNU/Linux and other POSIX-compatible
-systems by typing \c make.  Then copy the \c ardpicprog binary from the
-\c host directory to somewhere on your PATH.
+systems by typing \c make.  The program can be built using Cygwin under
+Windows in either Cygwin/POSIX mode (\c make) or native Windows mode
+(<tt>make win</tt>).  Once the program has been built, copy the
+\c ardpicprog binary from the \c host directory to somewhere on your PATH.
 
 The ProgramPIC sketch should be uploaded to an Arduino Uno compatible
 board that has an appropriate \ref pic14_zif_circuit "PIC programming shield"
@@ -28,7 +30,7 @@ attached to it.
 To test that the host can talk to the PIC programmer, plug the Arduino
 into the host computer, shut down the Serial Monitor window in the
 Arduino IDE, and type the following on the host (the port may be
-different on your machine):
+different on your machine; e.g. \c COM1 for native Windows mode):
 
 \code
 ardpicprog -p /dev/ttyACM0 --list-devices

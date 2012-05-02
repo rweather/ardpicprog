@@ -1,0 +1,27 @@
+
+# The -mno-cygwin option doesn't work with gcc 4
+CXX = g++-3 -mno-cygwin
+CC = gcc-3 -mno-cygwin
+
+TARGET = ardpicprog.exe
+VERSION = 0.1.1
+
+SOURCES = hexfile.cpp main.cpp serialport.cpp serialport_win.cpp
+OBJECTS = hexfile.o main.o serialport.o serialport_win.o
+
+CXXFLAGS = -g -Wall -DARDPICPROG_VERSION=\"$(VERSION)\"
+
+LDFLAGS += -g -lstdc++
+
+all:	$(TARGET)
+
+$(TARGET):	$(OBJECTS)
+	$(CXX) -o $(TARGET) $(OBJECTS) $(LDFLAGS)
+
+clean:
+	rm -f $(TARGET) $(OBJECTS)
+
+hexfile.o: hexfile.h serialport.h
+main.o: serialport.h hexfile.h
+serialport.o: serialport.h
+serialport_win.o: serialport.h
