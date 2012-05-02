@@ -21,7 +21,12 @@
 #include <string>
 #include <map>
 #include <stddef.h>
+#ifdef _WIN32
+#define	SERIAL_WIN32	1
+#else
+#define	SERIAL_POSIX	1
 #include <termios.h>
+#endif
 
 typedef std::map<std::string, std::string> DeviceInfoMap;
 
@@ -47,12 +52,16 @@ public:
     void setTimeout(int timeout) { timeoutSecs = timeout; }
 
 private:
+#ifdef SERIAL_POSIX
     int fd;
     struct termios prevParams;
+#endif
     char buffer[1024];
     int buflen;
     int bufposn;
     int timeoutSecs;
+
+    void init();
 
     bool read(char *data, size_t len);
     int readChar();
