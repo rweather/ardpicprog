@@ -68,7 +68,7 @@ Usage</h2>
 Common options</h2>
 <dl class="user"><dt><b>--quiet</b></dt><dd>Suppress the copyright header.</dd></dl>
 <dl class="user"><dt><b>--device DEVTYPE, -d DEVTYPE</b></dt><dd>Specifies the type of PIC device that is in the programmer; e.g. <code>pic16f84</code>, <code>pic16f628a</code>, etc. If this option is not present or it is set to <b>auto</b>, then Ardpicprog will attempt to autodetect the device in the programmer. Older PIC devices that do not have an identifier word will need the <b>--device</b> option to be specified manually. The <b>--list-devices</b> option can be used to list all supported PIC device types. See also, <a class="el" href="supported_devices.html">Supported PIC devices</a>.</dd></dl>
-<dl class="user"><dt><b>--pic-serial-port PORT, -p PORT</b></dt><dd>Specifies the serial port tty device to use to communicate with the programmer. The default is <code>/dev/ttyACM0</code>.</dd></dl>
+<dl class="user"><dt><b>--pic-serial-port PORT, -p PORT</b></dt><dd>Specifies the serial port tty device to use to communicate with the programmer. The default is <code>/dev/ttyACM0</code> under POSIX systems and <code>COM1</code> under Windows.</dd></dl>
 <dl class="user"><dt><b>--speed SPEED</b></dt><dd>Specifies the speed of the serial connection to the programmer. The default is 9600. Other allowable values are 19200, 38400, 57600, 115200, and 230400. Note: the <code>setup()</code> function of the sketch running in the Arduino will need to be modified to use the same speed. This option is specific to Ardpicprog; it does not exist in picprog.</dd></dl>
 <h2><a class="anchor" id="host_reading"></a>
 Reading from a PIC device</h2>
@@ -103,7 +103,7 @@ Ignored options</h2>
 <h2><a class="anchor" id="host_environment"></a>
 Environment</h2>
 <dl class="user"><dt><b>PIC_DEVICE</b></dt><dd>PIC device to read or burn. Defaults to autodetection of the PIC device type. The <b>--device</b> option overrides this environment variable.</dd></dl>
-<dl class="user"><dt><b>PIC_PORT</b></dt><dd>Specifies the serial port tty device to use to communicate with the programmer. The default is <code>/dev/ttyACM0</code>. The <b>--pic-serial-port</b> option overrides this environment variable.</dd></dl>
+<dl class="user"><dt><b>PIC_PORT</b></dt><dd>Specifies the serial port tty device to use to communicate with the programmer. The default is <code>/dev/ttyACM0</code> under POSIX systems and <code>COM1</code> under Windows. The <b>--pic-serial-port</b> option overrides this environment variable.</dd></dl>
 <h2><a class="anchor" id="host_exit"></a>
 Exit values</h2>
 <dl class="user"><dt><b>0</b></dt><dd>The reading or burning process completed with no error.</dd></dl>
@@ -127,7 +127,7 @@ Exit values</h2>
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Sat Apr 28 2012 19:41:21 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Wed May 2 2012 14:33:01 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>

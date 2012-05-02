@@ -54,9 +54,9 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="contents">
 <div class="textblock"><p>The source code for Ardpicprog is available from github: <a href="https://github.com/rweather/ardpicprog">https://github.com/rweather/ardpicprog</a>. There are two main parts to the source: the <a class="el" href="host_program.html">ardpicprog host program</a> and the <a class="el" href="programpic_sketch.html">ProgramPIC sketch</a>.</p>
-<p>The host program can be built on GNU/Linux and other POSIX-compatible systems by typing <code>make</code>. Then copy the <code>ardpicprog</code> binary from the <code>host</code> directory to somewhere on your PATH.</p>
+<p>The host program can be built on GNU/Linux and other POSIX-compatible systems by typing <code>make</code>. The program can be built using Cygwin under Windows in either Cygwin/POSIX mode (<code>make</code>) or native Windows mode (<code>make win</code>). Once the program has been built, copy the <code>ardpicprog</code> binary from the <code>host</code> directory to somewhere on your PATH.</p>
 <p>The ProgramPIC sketch should be uploaded to an Arduino Uno compatible board that has an appropriate <a class="el" href="pic14_zif_circuit.html">PIC programming shield</a> attached to it.</p>
-<p>To test that the host can talk to the PIC programmer, plug the Arduino into the host computer, shut down the Serial Monitor window in the Arduino IDE, and type the following on the host (the port may be different on your machine):</p>
+<p>To test that the host can talk to the PIC programmer, plug the Arduino into the host computer, shut down the Serial Monitor window in the Arduino IDE, and type the following on the host (the port may be different on your machine; e.g. <code>COM1</code> for native Windows mode):</p>
 <div class="fragment"><pre class="fragment">ardpicprog -p /dev/ttyACM0 --list-devices
 </pre></div><p>You should see a list of supported devices like the following:</p>
 <div class="fragment"><pre class="fragment">Supported devices:
@@ -83,7 +83,7 @@ pic16f648a*
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Sat Apr 28 2012 19:41:21 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Wed May 2 2012 14:33:01 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>
