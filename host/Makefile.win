@@ -4,7 +4,7 @@ CXX = g++-3 -mno-cygwin
 CC = gcc-3 -mno-cygwin
 
 TARGET = ardpicprog.exe
-VERSION = 0.1.1
+VERSION = 0.1.2
 
 SOURCES = hexfile.cpp main.cpp serialport.cpp serialport_win.cpp
 OBJECTS = hexfile.o main.o serialport.o serialport_win.o

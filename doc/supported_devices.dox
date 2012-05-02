@@ -10,11 +10,12 @@
 
 /**
 \file supported_devices.dox
-\page supported_devices Supported PIC devices
+\page supported_devices Supported PIC and EEPROM devices
 
 The following list describes the devices that are currently supported
-by the \ref programpic_sketch "ProgramPIC sketch".  The sketch must be
-used with a circuit that is appropriate for the PIC device in question.
+by the \ref programpic_sketch "ProgramPIC" or
+\ref programeeprom_sketch "ProgramEEPROM" sketch.  The sketch must be
+used with a circuit that is appropriate for the device in question.
 The \ref pic14_zif_circuit "14-bit PIC programmer" circuit supports
 some of these devices via the ZIF socket and others via the ICSP cable.
 
@@ -55,84 +56,210 @@ will be necessary.
   <td><b>Device Type</b></td>
   <td><b>Detection Method</b></td>
   <td><b>Programming Connector</b></td>
+  <td><b>Sketch</b></td>
   <td><b>Notes</b></td>
 </tr>
 <tr>
   <td>pic12f629</td>
   <td>Autodetected</td>
   <td>ZIF, 8-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
 <tr>
   <td>pic12f630</td>
   <td>Autodetected</td>
   <td>ZIF, 8-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
 <tr>
   <td>pic12f675</td>
   <td>Autodetected</td>
   <td>ZIF, 8-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
 <tr>
   <td>pic12f676</td>
   <td>Autodetected</td>
   <td>ZIF, 8-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
 <tr>
   <td>pic16f84</td>
   <td>Manual</td>
   <td>ZIF, 18-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
 <tr>
   <td>pic16f84a</td>
   <td>Autodetected</td>
   <td>ZIF, 18-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td>Personally tested by author</td>
 </tr>
 <tr>
   <td>pic16f87</td>
   <td>Autodetected</td>
   <td>ICSP</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td>PGM is on pin 9 instead of pin 10</td>
 </tr>
 <tr>
   <td>pic16f88</td>
   <td>Autodetected</td>
   <td>ICSP</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td>PGM is on pin 9 instead of pin 10</td>
 </tr>
 <tr>
   <td>pic16f627</td>
   <td>Autodetected</td>
   <td>ZIF, 18-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
 <tr>
   <td>pic16f627a</td>
   <td>Autodetected</td>
   <td>ZIF, 18-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
 <tr>
   <td>pic16f628</td>
   <td>Autodetected</td>
   <td>ZIF, 18-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
 <tr>
   <td>pic16f628a</td>
   <td>Autodetected</td>
   <td>ZIF, 18-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
   <td>Personally tested by author</td>
 </tr>
 <tr>
   <td>pic16f648a</td>
   <td>Autodetected</td>
   <td>ZIF, 18-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc00</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc01</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc014</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc02</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc024</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc025</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc04</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc08</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc16</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc32</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc64</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc128</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc256</td>
+  <td>Autodetected</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td>Personally tested by author</td>
+</tr>
+<tr>
+  <td>24lc512</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>24lc1025</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
+  <td>Pin 3 (A2) on the 24LC1025 must be tied to VDD, not VSS</td>
+</tr>
+<tr>
+  <td>24lc1026</td>
+  <td>Manual</td>
+  <td>ICSP</td>
+  <td>\ref programeeprom_sketch "ProgramEEPROM"</td>
   <td> </td>
 </tr>
 </table>

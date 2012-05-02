@@ -17,6 +17,9 @@ This sketch should be uploaded to an Arduino Uno compatible board that has a
 must be suitable for the PIC device that is being programmed.  See the
 \ref supported_devices "list of supported devices" for more information.
 
+If you are programming an EEPROM from the 24LCXX family, then use the
+\ref programeeprom_sketch "ProgramEEPROM" sketch instead.
+
 \include ProgramPIC.pde
 
 */

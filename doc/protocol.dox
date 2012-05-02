@@ -10,12 +10,12 @@
 
 /**
 \file protocol.dox
-\page pic_programming_protocol Serial protocol for programming PIC's with Arduino
+\page pic_programming_protocol Serial protocol for programming PIC's and EEPROM's with Arduino
 
 \section sect_protocol_defs Definitions
 
 \li \b ProgramPIC refers to the sketch running on the Arduino board that
-implements the Arduino side of the PIC programming protocol.
+implements the Arduino side of the PIC or EEPROM programming protocol.
 \li \b Host refers to the program running on the computer system
 connected to the Arduino via USB that manages the PIC programming process.
 \li \b Device refers to the actual PIC in the programming socket that
@@ -176,10 +176,14 @@ that are not recognized by their device identifier:
 \li \c DeviceID presents the raw device identifier of the PIC from
 config memory location 0x2006.  Will be "0000" (exactly 4 zeroes)
 if there is a PIC in the programming socket but it is an older model
-that does not have a device identifier.
+that does not have a device identifier.  If the device is a standalone
+EEPROM rather than a PIC, then the \c DeviceID will also be reported
+as "0000", but there will be a \c DeviceName present for the default
+EEPROM type.
 \li \c ConfigWord presents the contents of the first configuration word.
 Additional configuration words can be accessed with "READ" once the
-host knows the \c ConfigRange (see below).
+host knows the \c ConfigRange (see below).  The configuration word will
+not be present if the device is a standalone EEPROM.
 
 If ProgramPIC recognizes the PIC type, then it will also return the
 following extra information:
@@ -187,21 +191,27 @@ following extra information:
 \li \c DeviceName presents the name of the device; e.g. "pic16f628a".
 The revision number can be obtained from the low order bits of \c DeviceID.
 \li \c ProgramRange gives the range of flat addresses that comprise
-program memory; e.g. "0000-07FF" for the PIC16F628A.
+program memory; e.g. "0000-07FF" for the PIC16F628A.  This field will not
+be present if the device does not have program memory (e.g. a standalone
+EEPROM).
 \li \c ProgramBits gives the number of significant bits that are
 used by instructions in program memory.  This field is optional and
 defaults to 14.  Value is in decimal, not hexadecimal.
 \li \c ConfigRange gives the range of flat addresses that comprise
-configuration memory; e.g. "2000-2007".
+configuration memory; e.g. "2000-2007".  This field will not be present
+if the device does not have configuration memory (e.g. a standalone EEPROM).
 \li \c ConfigSave is a mask that specifies which bits in the configuration
 word will be automatically saved by \ref sect_cmd_erase "ERASE" and
 \ref sect_cmd_write "WRITE" because they contain calibration data.
 This field is optional and defaults to 0.
 \li \c DataRange gives the range of flat addresses that comprise
-EEPROM data memory; e.g. "2100-217F".
+EEPROM data memory; e.g. "2100-217F".  This field will not be present
+if the device does not have data memory.
 \li \c DataBits gives the number of significant bits that are
 used by locations in data memory.  This field is optional and
-defaults to 8.  Value is in decimal, not hexadecimal.
+defaults to 8.  The number of data bits will typically be 16 for
+standalone EEPROM's as the data is read and written two bytes at a time.
+Value is in decimal, not hexadecimal.
 \li \c ReservedRange gives the range of flat addresses that comprise
 reserved words that will be preserved by an \ref sect_cmd_erase "ERASE"
 command.  If there is no reserved range of words, then this field will
@@ -466,6 +476,12 @@ ERASE NOPRESERVE
 If \c NOPRESERVE is given and the device does not have reserved words,
 then the command will act identically to \c ERASE.  The host should only
 use \c NOPRESERVE if it is about to send new data for the reserved words.
+
+Some devices, particularly large EEPROMS in the 24LCXX family, can take
+longer to erase than the standard 3 second host timeout.  The \c ERASE
+command should send the line \c PENDING to the host at least once every
+two seconds to tell the host that the operation is still in progress.
+Once the erase completes, the sketch will respond with \c OK or \c ERROR.
 
 \section sect_cmd_pwroff PWROFF
 

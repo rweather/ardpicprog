@@ -1,7 +1,7 @@
 
 TARGET = ardpicprog
 MANPAGE = ardpicprog.1
-VERSION = 0.1.1
+VERSION = 0.1.2
 
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin

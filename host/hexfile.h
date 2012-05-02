@@ -75,6 +75,12 @@ public:
     int dataBits() const { return _dataBits; }
     void setDataBits(int bits) { _dataBits = bits; }
 
+    Address programSizeWords() const { return _programEnd - _programStart + 1; }
+    Address dataSizeBytes() const
+    {
+        return (_dataEnd - _dataStart + 1) * dataBits() / 8;
+    }
+
     Word word(Address address) const;
     void setWord(Address address, Word word);
 

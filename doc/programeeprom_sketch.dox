@@ -1,0 +1,52 @@
+/*
+ * Copyright (C) 2012 Southern Storm Software, Pty Ltd.
+ *
+ * This work is licensed under the Creative Commons Attribution-ShareAlike
+ * 2.5 Generic License. To view a copy of this license, visit
+ * http://creativecommons.org/licenses/by-sa/2.5/ or send a letter
+ * to Creative Commons, 444 Castro Street, Suite 900, Mountain View,
+ * California, 94041, USA.
+ */
+
+/**
+\file programeeprom_sketch.dox
+\page programeeprom_sketch ProgramEEPROM sketch
+
+This sketch should be used in place of \ref programpic_sketch "ProgramPIC"
+when programming a device from the 24LCXX family of standalone EEPROM's.
+The default implementation supports the 24LC256 device (and equivalent devices
+such as the 24FC256).  Other devices in the family must be specified
+manually using the host program's <b>--device</b> option:
+
+\code
+ardpicprog -o out.hex --skip-ones    # defaults to 24lc256
+ardpicprog --device 24lc64 -o out.hex --skip-ones
+\endcode
+
+The ZIF socket in the \ref pic14_zif_circuit "PIC programmer shield" cannot
+be used directly with the 24LCXX family of EEPROM devices.  An ICSP cable and
+adapter that uses the following circuit will be needed:
+
+\image html eeprom_circuit.png
+
+Because the EEPROM does not use the MCLR/VPP pin on the ICSP header,
+it is not necessary to connect the 13 volt power supply to the shield
+while programming EEPROM's.  The following photo shows the above circuit
+made up on a breadboard and connected to the programmer via an ICSP cable:
+
+\image html eeprom_circuit_inuse.jpg
+
+The sketch treats the EEPROM as a collection of 16-bit words (LSB first)
+so as to be compatible with the word-oriented operation of
+\ref programpic_sketch "ProgramPIC".  This means that the input HEX
+file must contain an even number of bytes.  Each 16-bit word from the
+HEX file is written to two consecutive 8-bit bytes in the EEPROM's
+address space.  This is slightly different to the handling of data memory
+in PIC devices which reads 16-bit words from the HEX file but writes only
+the LSB to the PIC.
+
+The full source code for the ProgramEEPROM sketch follows:
+
+\include ProgramEEPROM.pde
+
+*/

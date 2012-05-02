@@ -65,6 +65,8 @@ DeviceInfoMap SerialPort::initDevice(const std::string &deviceName)
     // Fetch the device details.  If we have a DeviceName and it matches,
     // then we are ready to go.  If the DeviceName does not match, then we
     // know the type of device in the socket, but it isn't what we wanted.
+    // If the DeviceID is "0000" but we have a DeviceName, then the device
+    // is an EEPROM that needs a manual override to change the default.
     DeviceInfoMap details = readDeviceInfo();
     DeviceInfoMap::const_iterator it = details.find("DeviceName");
     if (it != details.end()) {
@@ -72,15 +74,18 @@ DeviceInfoMap SerialPort::initDevice(const std::string &deviceName)
             return details;     // Use auto-detected device in the socket.
         if (deviceNameMatch(deviceName, (*it).second))
             return details;
-        fprintf(stderr, "Expecting %s but found %s in the programmer.\n",
-                deviceName.c_str(), (*it).second.c_str());
-        return DeviceInfoMap();
+        it = details.find("DeviceID");
+        if (it == details.end() || (*it).second != "0000") {
+            fprintf(stderr, "Expecting %s but found %s in the programmer.\n",
+                    deviceName.c_str(), (*it).second.c_str());
+            return DeviceInfoMap();
+        }
     }
 
     // If the DeviceID is not "0000", then the device in the socket reports
     // a device identifier, but it is not supported by the programmer.
     it = details.find("DeviceID");
-    if (it != details.end() && (*it).second == "0000") {
+    if (it != details.end() && (*it).second != "0000") {
         fprintf(stderr, "Unsupported device in programmer, ID = %s\n",
                 (*it).second.c_str());
         return DeviceInfoMap();
@@ -118,6 +123,10 @@ bool SerialPort::command(const std::string &cmd)
     line += '\n';
     write(line.c_str(), line.length());
     std::string response = readLine();
+    while (response == "PENDING") {
+        // Long-running operation: sketch has asked for a longer timeout.
+        response = readLine();
+    }
     return response == "OK";
 }
 

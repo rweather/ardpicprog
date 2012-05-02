@@ -704,10 +704,12 @@ void cmdWriteBinary(const char *args)
         // Read the contents of the packet from the serial input stream.
         int offset = 0;
         while (offset < len) {
-            if (offset < BINARY_TRANSFER_MAX)
+            if (offset < BINARY_TRANSFER_MAX) {
                 buffer[offset++] = (char)readBlocking();
-            else
+            } else {
                 readBlocking();     // Packet is too big - discard extra bytes.
+                ++offset;
+            }
         }
 
         // Write the words to memory.

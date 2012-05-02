@@ -252,10 +252,9 @@ fputs("\n", stderr);
     hexFile.setFormat(opt_format);
 
     // Dump the type of device and how much memory it has.
-    printf("Device %s, program memory: %ld, data memory: %ld.\n",
-           hexFile.deviceName().c_str(),
-           hexFile.programEnd() - hexFile.programStart() + 1,
-           hexFile.dataEnd() - hexFile.dataStart() + 1);
+    printf("Device %s, program memory: %ld words, data memory: %ld bytes.\n",
+           hexFile.deviceName().c_str(), hexFile.programSizeWords(),
+           hexFile.dataSizeBytes());
 
     // Read the input file.
     if (!opt_input.empty()) {
@@ -285,6 +284,7 @@ fputs("\n", stderr);
     if (opt_erase) {
         if (opt_force_calibration) {
             if (hexFile.canForceCalibration()) {
+                printf("Erasing and removing code protection.\n");
                 if (!port.command("ERASE NOPRESERVE")) {
                     fprintf(stderr, "Erase of device failed\n");
                     return EXIT_CODE_IO_ERROR;
@@ -293,11 +293,13 @@ fputs("\n", stderr);
                 fprintf(stderr, "Input does not have calibration data.  Will not erase device.\n");
                 return EXIT_CODE_IO_ERROR;
             }
-        } else if (!port.command("ERASE")) {
-            fprintf(stderr, "Erase of device failed\n");
-            return EXIT_CODE_IO_ERROR;
+        } else {
+            printf("Erasing and removing code protection.\n");
+            if (!port.command("ERASE")) {
+                fprintf(stderr, "Erase of device failed\n");
+                return EXIT_CODE_IO_ERROR;
+            }
         }
-        printf("Erased and removed code protection.\n");
     }
 
     // Burn the input file into the device if requested.

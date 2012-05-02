@@ -15,24 +15,26 @@
 <img src="pic14_zif_assembled.jpg" width="350" align="right">
 
 Ardpicprog is an <a href="http://www.arduino.cc/">Arduino</a>-based
-solution for programming PIC microcontrollers
+solution for programming PIC microcontrollers and EEPROM devices
 from <a href="http://www.microchip.com">Microchip Technology Inc</a>,
-such as the PIC16F84, PIC16F628A, PIC12F675, etc.  The solution
+such as the PIC16F84, PIC16F628A, PIC12F675, 24LC256, etc.  The solution
 has three parts:
 
 \li \ref pic14_zif_circuit "Circuit" that is built on one or more prototyping
-shields to interface to the PIC and provide the 13 volt programming voltage.
-\li Sketch called \ref programpic_sketch "ProgramPIC" that is loaded into an
-Arduino to directly interface with the PIC during programming.  The sketch
-implements a simple \ref pic_programming_protocol "serial protocol" for
+shields to interface to the PIC or EEPROM and provide the 13 volt
+programming voltage.
+\li Sketches called \ref programpic_sketch "ProgramPIC" and
+\ref programeeprom_sketch "ProgramEEPROM" that are loaded into an
+Arduino to directly interface with the device during programming.  The sketches
+implement a simple \ref pic_programming_protocol "serial protocol" for
 interfacing with the host.
 \li \ref host_program "Host program" called \c ardpicprog; a drop-in replacement
 for <a href="http://hyvatti.iki.fi/~jaakko/pic/picprog.html">picprog</a> that
-implements the serial protocol and controls the PIC programming process
+implements the serial protocol and controls the programming process
 on the computer side.
 
 Note: Ardpicprog is not compatible with JDM-style PIC programmers.
-Those programmers use typically use RS-232 control signals such as DTR
+Those programmers typically use RS-232 control signals such as DTR
 and CTS to interface to the host computer.  The Arduino has a simple serial
 interface over USB with no access to the RS-232 control signals from
 the host.  Because of this, ardpicprog uses a completely different
@@ -46,9 +48,10 @@ More information about Ardpicprog can be found on the following pages:
 \li \ref installation "Installation instructions".
 \li \ref pic14_zif_circuit "Circuit details for 14-bit PIC programmer".
 \li \ref programpic_sketch "ProgramPIC sketch for interfacing with the PIC programmer".
+\li \ref programeeprom_sketch "ProgramEEPROM sketch for programming EEPROM's from the 24LCXX family".
 \li \ref host_program "Host program for controlling the PIC programmer".
-\li \ref supported_devices "Supported PIC devices".
-\li \ref pic_programming_protocol "Serial protocol for programming PIC's with Arduino".
+\li \ref supported_devices "Supported PIC and EEPROM devices".
+\li \ref pic_programming_protocol "Serial protocol for programming PIC's and EEPROM's with Arduino".
 
 Ardpicprog's software is distributed under the terms of the
 <a href="http://www.gnu.org/licenses/gpl-3.0-standalone.html">GNU General

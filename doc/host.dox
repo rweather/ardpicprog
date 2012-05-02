@@ -13,9 +13,9 @@
 \page host_program Host program for controlling the PIC programmer
 
 Ardpicprog is a program that runs on the host machine and controls the
-process of reading to and writing from a PIC device.  It connects via a
-serial port to the sketch running on the Arduino that implements the
-PIC programming logic.
+process of reading to and writing from a PIC or EEPROM device.  It connects
+via a serial port to the sketch running on the Arduino that implements the
+PIC or EEPROM programming logic.
 
 The command-line syntax of Ardpicprog is designed to be backwards-compatible
 with <a href="http://hyvatti.iki.fi/~jaakko/pic/picprog.html">picprog</a>
@@ -23,12 +23,12 @@ to make it easy to replace invocations of picprog in existing Makefile's
 and build scripts.
 
 The host program does not implement any specific logic for
-programming PIC devices.  It merely communicates with a sketch running on
-the Arduino via a serial port and asks it to perform
+programming PIC and EEPROM devices.  It merely communicates with a sketch
+running on the Arduino via a serial port and asks it to perform
 \ref sect_cmd_read "READ", \ref sect_cmd_write "WRITE",
 \ref sect_cmd_erase "ERASE", and other commands.  The sketch itself takes
-care of the low-level details of talking to the PIC device.  To support a
-new PIC device type, the sketch will need to be replaced with an alternative
+care of the low-level details of talking to the device.  To support a
+new device type, the sketch will need to be replaced with an alternative
 that is familiar with the low-level programming details of the new device.
 The \ref pic14_zif_circuit "circuit" for the PIC programmer shield may
 also need to be modified.
@@ -53,13 +53,13 @@ ardpicprog --quiet -q --warranty --copying --help -h
 Suppress the copyright header.
 
 \par --device DEVTYPE, -d DEVTYPE
-Specifies the type of PIC device that is in the programmer;
+Specifies the type of device that is in the programmer;
 e.g. \c pic16f84, \c pic16f628a, etc.  If this option is not present or it
 is set to <b>auto</b>, then Ardpicprog will attempt to autodetect the
 device in the programmer.  Older PIC devices that do not have an identifier
 word will need the <b>--device</b> option to be specified manually.
-The <b>--list-devices</b> option can be used to list all supported PIC
-device types.  See also, \ref supported_devices "Supported PIC devices".
+The <b>--list-devices</b> option can be used to list all supported device
+types.  See also, \ref supported_devices "Supported PIC and EEPROM devices".
 
 \par --pic-serial-port PORT, -p PORT
 Specifies the serial port tty device to use to communicate with the
@@ -74,19 +74,19 @@ the sketch running in the Arduino will need to be modified to use
 the same speed.  This option is specific to Ardpicprog; it does not
 exist in picprog.
 
-\section host_reading Reading from a PIC device
+\section host_reading Reading from a PIC or EEPROM device
 
 \code
 ardpicprog --output-hexfile OUTPUT --skip-ones
 \endcode
 
 \par --output-hexfile OUTPUT, -o OUTPUT
-Reads the entire contents of the PIC device and writes them in
+Reads the entire contents of the device and writes them in
 <a href="http://en.wikipedia.org/wiki/Intel_HEX">Intel HEX</a>
 format to OUTPUT.
 
 \par --skip-ones
-Ignores any word from the PIC device that is all-ones; i.e. not set to a
+Ignores any word from the device that is all-ones; i.e. not set to a
 specific value.
 
 \par --ihx8m, --ihx16, --ihx32
@@ -94,22 +94,22 @@ Selects the type of HEX file to write to OUTPUT.  The default is
 <b>--ihx16</b> for low and mid-range PIC devices and <b>--ihx32</b> for
 high-range PIC devices.
 
-\section host_burning Burning a PIC device
+\section host_burning Burning a PIC or EEPROM device
 
 \code
 ardpicprog --erase --burn --input-hexfile INPUT
 \endcode
 
 \par --erase
-Erases the PIC before burning program, data, and configuration words onto it.
+Erases the device before burning program, data, and configuration words onto it.
 
 \par --burn
-Burn program, data, and configuration words onto the PIC device.
+Burn program, data, and configuration words onto the PIC or EEPROM device.
 The words will be read back after burning to verify that they have
 been written correctly.
 
 \par --input-hexfile INPUT, -i INPUT
-Specifies the HEX file whose contents should be written to the PIC device.
+Specifies the HEX file whose contents should be written to the device.
 The input must be in <a href="http://en.wikipedia.org/wiki/Intel_HEX">Intel
 HEX</a> format, be it IHX8M, IHX16, or IHX32.  The contents of the HEX file
 must be suitable for the type of device in the programmer.
@@ -127,16 +127,16 @@ calibration words.  If <b>--force-calibration</b> is not specified,
 then calibration words that appear in INPUT will be ignored.
 
 \par --output-hexfile OUTPUT, -o OUTPUT
-After burning, read back the contents of the PIC device and write them
+After burning, read back the contents of the device and write them
 to OUTPUT.
 
 \section host_other Other options
 
 \par --list-devices
-Lists all of the PIC devices that are supported by the programmer sketch
-running on the Arduino.  If your device type does not appear in this list,
-then you will need a new version of the sketch.  This option is specific
-to Ardpicprog; it does not exist in picprog.
+Lists all of the PIC or EEPROM devices that are supported by the programmer
+sketch running on the Arduino.  If your device type does not appear in
+this list, then you will need a new version of the sketch.  This option is
+specific to Ardpicprog; it does not exist in picprog.
 
 \par --help
 Prints usage information for Ardpicprog.
@@ -162,8 +162,8 @@ picprog, but are ignored by Ardpicprog:
 \section host_environment Environment
 
 \par PIC_DEVICE
-PIC device to read or burn.  Defaults to autodetection of the PIC device type.
-The <b>--device</b> option overrides this environment variable.
+PIC or EEPROM device to read or burn.  Defaults to autodetection of the device
+type.  The <b>--device</b> option overrides this environment variable.
 
 \par PIC_PORT
 Specifies the serial port tty device to use to communicate with the
@@ -192,6 +192,6 @@ failed for some reason (e.g. read-back of contents did not match),
 or there was a problem when writing to OUTPUT.
 
 \par 76
-The PIC device is unknown to the programmer.
+The device is unknown to the programmer.
 
 */
