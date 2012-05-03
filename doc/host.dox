@@ -13,7 +13,7 @@
 \page host_program Host program for controlling the PIC programmer
 
 Ardpicprog is a program that runs on the host machine and controls the
-process or reading to and writing from a PIC device.  It connects via a
+process of reading to and writing from a PIC device.  It connects via a
 serial port to the sketch running on the Arduino that implements the
 PIC programming logic.
 
