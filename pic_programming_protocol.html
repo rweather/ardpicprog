@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Ardpicprog: Serial protocol for programming PIC&#39;s with Arduino</title>
+<title>Ardpicprog: Serial protocol for programming PIC&#39;s and EEPROM&#39;s with Arduino</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
@@ -50,13 +50,13 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="headertitle">
-<div class="title">Serial protocol for programming PIC's with Arduino </div>  </div>
+<div class="title">Serial protocol for programming PIC's and EEPROM's with Arduino </div>  </div>
 </div>
 <div class="contents">
 <div class="textblock"><h2><a class="anchor" id="sect_protocol_defs"></a>
 Definitions</h2>
 <ul>
-<li><b>ProgramPIC</b> refers to the sketch running on the Arduino board that implements the Arduino side of the PIC programming protocol. </li>
+<li><b>ProgramPIC</b> refers to the sketch running on the Arduino board that implements the Arduino side of the PIC or EEPROM programming protocol. </li>
 <li><b>Host</b> refers to the program running on the computer system connected to the Arduino via USB that manages the PIC programming process. </li>
 <li><b>Device</b> refers to the actual PIC in the programming socket that ProgramPIC is talking to. </li>
 <li><b>Programming socket</b> refers to the physical connection between ProgramPIC and the device, which may be a ZIF socket, ICSP cable, or some other physical connector.</li>
@@ -109,18 +109,18 @@ ConfigWord: 3FFF
 <p>It is required that this command be used before attempting to read or write from the PIC to detect the type of PIC in the programming socket and to ensure that ProgramPIC is using the correct address ranges for program, config, and data memory.</p>
 <p>The following information is provided for all PIC types, including those that are not recognized by their device identifier:</p>
 <ul>
-<li><code>DeviceID</code> presents the raw device identifier of the PIC from config memory location 0x2006. Will be "0000" (exactly 4 zeroes) if there is a PIC in the programming socket but it is an older model that does not have a device identifier. </li>
-<li><code>ConfigWord</code> presents the contents of the first configuration word. Additional configuration words can be accessed with "READ" once the host knows the <code>ConfigRange</code> (see below).</li>
+<li><code>DeviceID</code> presents the raw device identifier of the PIC from config memory location 0x2006. Will be "0000" (exactly 4 zeroes) if there is a PIC in the programming socket but it is an older model that does not have a device identifier. If the device is a standalone EEPROM rather than a PIC, then the <code>DeviceID</code> will also be reported as "0000", but there will be a <code>DeviceName</code> present for the default EEPROM type. </li>
+<li><code>ConfigWord</code> presents the contents of the first configuration word. Additional configuration words can be accessed with "READ" once the host knows the <code>ConfigRange</code> (see below). The configuration word will not be present if the device is a standalone EEPROM.</li>
 </ul>
 <p>If ProgramPIC recognizes the PIC type, then it will also return the following extra information:</p>
 <ul>
 <li><code>DeviceName</code> presents the name of the device; e.g. "pic16f628a". The revision number can be obtained from the low order bits of <code>DeviceID</code>. </li>
-<li><code>ProgramRange</code> gives the range of flat addresses that comprise program memory; e.g. "0000-07FF" for the PIC16F628A. </li>
+<li><code>ProgramRange</code> gives the range of flat addresses that comprise program memory; e.g. "0000-07FF" for the PIC16F628A. This field will not be present if the device does not have program memory (e.g. a standalone EEPROM). </li>
 <li><code>ProgramBits</code> gives the number of significant bits that are used by instructions in program memory. This field is optional and defaults to 14. Value is in decimal, not hexadecimal. </li>
-<li><code>ConfigRange</code> gives the range of flat addresses that comprise configuration memory; e.g. "2000-2007". </li>
+<li><code>ConfigRange</code> gives the range of flat addresses that comprise configuration memory; e.g. "2000-2007". This field will not be present if the device does not have configuration memory (e.g. a standalone EEPROM). </li>
 <li><code>ConfigSave</code> is a mask that specifies which bits in the configuration word will be automatically saved by <a class="el" href="pic_programming_protocol.html#sect_cmd_erase">ERASE</a> and <a class="el" href="pic_programming_protocol.html#sect_cmd_write">WRITE</a> because they contain calibration data. This field is optional and defaults to 0. </li>
-<li><code>DataRange</code> gives the range of flat addresses that comprise EEPROM data memory; e.g. "2100-217F". </li>
-<li><code>DataBits</code> gives the number of significant bits that are used by locations in data memory. This field is optional and defaults to 8. Value is in decimal, not hexadecimal. </li>
+<li><code>DataRange</code> gives the range of flat addresses that comprise EEPROM data memory; e.g. "2100-217F". This field will not be present if the device does not have data memory. </li>
+<li><code>DataBits</code> gives the number of significant bits that are used by locations in data memory. This field is optional and defaults to 8. The number of data bits will typically be 16 for standalone EEPROM's as the data is read and written two bytes at a time. Value is in decimal, not hexadecimal. </li>
 <li><code>ReservedRange</code> gives the range of flat addresses that comprise reserved words that will be preserved by an <a class="el" href="pic_programming_protocol.html#sect_cmd_erase">ERASE</a> command. If there is no reserved range of words, then this field will not be present.</li>
 </ul>
 <p>If the device identifier is not recognized by ProgramPIC, then it may still be possible to issue some commands, but the result will be unreliable; particularly if the host attempts to write data to the PIC device. Thus, if the <code>DeviceName</code> field is not present and <code>DeviceID</code> is non-zero, then the host should report an error along the lines of "Unsupported device, ID = NNNN".</p>
@@ -229,6 +229,7 @@ ERASE</h2>
 </pre></div><p>If the device has reserved words, then the host can ask that they be erased as well by using the <code>NOPRESERVE</code> option:</p>
 <div class="fragment"><pre class="fragment">ERASE NOPRESERVE
 </pre></div><p>If <code>NOPRESERVE</code> is given and the device does not have reserved words, then the command will act identically to <code>ERASE</code>. The host should only use <code>NOPRESERVE</code> if it is about to send new data for the reserved words.</p>
+<p>Some devices, particularly large EEPROMS in the 24LCXX family, can take longer to erase than the standard 3 second host timeout. The <code>ERASE</code> command should send the line <code>PENDING</code> to the host at least once every two seconds to tell the host that the operation is still in progress. Once the erase completes, the sketch will respond with <code>OK</code> or <code>ERROR</code>.</p>
 <h2><a class="anchor" id="sect_cmd_pwroff"></a>
 PWROFF</h2>
 <p>The <code>PWROFF</code> command turns off the power to the programming socket. ProgramPIC responds with the line "OK". The power will be re-applied automatically when the next command that needs to talk to the programming socket is issued.</p>
@@ -260,7 +261,7 @@ Recommended sequence of commands</h2>
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Wed May 2 2012 14:33:01 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Sun May 6 2012 15:04:53 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>

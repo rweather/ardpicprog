@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Ardpicprog: ProgramPIC sketch</title>
+<title>Ardpicprog: ProgramEEPROM sketch</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
@@ -50,11 +50,22 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="headertitle">
-<div class="title">ProgramPIC sketch </div>  </div>
+<div class="title">ProgramEEPROM sketch </div>  </div>
 </div>
 <div class="contents">
-<div class="textblock"><p>This sketch should be uploaded to an Arduino Uno compatible board that has a <a class="el" href="pic14_zif_circuit.html">PIC programming shield</a> attached to it. The shield must be suitable for the PIC device that is being programmed. See the <a class="el" href="supported_devices.html">list of supported devices</a> for more information.</p>
-<p>If you are programming an EEPROM from the 24LCXX family, then use the <a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> sketch instead.</p>
+<div class="textblock"><p>This sketch should be used in place of <a class="el" href="programpic_sketch.html">ProgramPIC</a> when programming a device from the 24LCXX family of standalone EEPROM's. The default implementation supports the 24LC256 device (and equivalent devices such as the 24FC256). Other devices in the family must be specified manually using the host program's <b>--device</b> option:</p>
+<div class="fragment"><pre class="fragment">ardpicprog -o out.hex --skip-ones    # defaults to 24lc256
+ardpicprog --device 24lc64 -o out.hex --skip-ones
+</pre></div><p>The ZIF socket in the <a class="el" href="pic14_zif_circuit.html">PIC programmer shield</a> cannot be used directly with the 24LCXX family of EEPROM devices. An ICSP cable and adapter that uses the following circuit will be needed:</p>
+<div class="image">
+<img src="eeprom_circuit.png" alt="eeprom_circuit.png"/>
+</div>
+<p>Because the EEPROM does not use the MCLR/VPP pin on the ICSP header, it is not necessary to connect the 13 volt power supply to the shield while programming EEPROM's. The following photo shows the above circuit made up on a breadboard and connected to the programmer via an ICSP cable:</p>
+<div class="image">
+<img src="eeprom_circuit_inuse.jpg" alt="eeprom_circuit_inuse.jpg"/>
+</div>
+<p>The sketch treats the EEPROM as a collection of 16-bit words (LSB first) so as to be compatible with the word-oriented operation of <a class="el" href="programpic_sketch.html">ProgramPIC</a>. This means that the input HEX file must contain an even number of bytes. Each 16-bit word from the HEX file is written to two consecutive 8-bit bytes in the EEPROM's address space. This is slightly different to the handling of data memory in PIC devices which reads 16-bit words from the HEX file but writes only the LSB to the PIC.</p>
+<p>The full source code for the ProgramEEPROM sketch follows:</p>
 <div class="fragment"><pre class="fragment"><span class="comment">/*</span>
 <span class="comment"> * Copyright (C) 2012 Southern Storm Software, Pty Ltd.</span>
 <span class="comment"> *</span>
@@ -75,7 +86,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <span class="preprocessor">#include &lt;avr/pgmspace.h&gt;</span>       <span class="comment">// For PROGMEM</span>
 
 <span class="comment">// Pin mappings for the PIC programming shield.</span>
-<span class="preprocessor">#define PIN_MCLR        A1      // 0: MCLR is VPP voltage, 1: Reset PIC</span>
+<span class="preprocessor">#define PIN_MCLR        A1      // MCLR - not used for EEPROM mode.</span>
 <span class="preprocessor"></span><span class="preprocessor">#define PIN_ACTIVITY    A5      // LED that indicates read/write activity</span>
 <span class="preprocessor"></span><span class="preprocessor">#define PIN_VDD         2       // Controls the power to the PIC</span>
 <span class="preprocessor"></span><span class="preprocessor">#define PIN_CLOCK       4       // Clock pin</span>
@@ -85,75 +96,43 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <span class="preprocessor"></span><span class="preprocessor">#define MCLR_VPP        LOW     // PIN_MCLR state to apply 13v to MCLR/VPP pin</span>
 <span class="preprocessor"></span>
 <span class="comment">// All delays are in microseconds.</span>
-<span class="preprocessor">#define DELAY_SETTLE    50      // Delay for lines to settle for reset</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TPPDP     5       // Hold time after raising MCLR</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_THLD0     5       // Hold time after raising VDD</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TSET1     1       // Data in setup time before lowering clock</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_THLD1     1       // Data in hold time after lowering clock</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TDLY2     1       // Delay between commands or data</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TDLY3     1       // Delay until data bit read will be valid</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TPROG     4000    // Time for a program memory write to complete</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TDPROG    6000    // Time for a data memory write to complete</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TERA      6000    // Time for a word erase to complete</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TPROG5    1000    // Time for program write on FLASH5 systems</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TFULLERA  50000   // Time for a full chip erase</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DELAY_TFULL84   20000   // Intermediate wait for PIC16F84/PIC16F84A</span>
-<span class="preprocessor"></span>
-<span class="comment">// Commands that may be sent to the device.</span>
-<span class="preprocessor">#define CMD_LOAD_CONFIG         0x00    // Load (write) to config memory</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_LOAD_PROGRAM_MEMORY 0x02    // Load to program memory</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_LOAD_DATA_MEMORY    0x03    // Load to data memory</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_INCREMENT_ADDRESS   0x06    // Increment the PC</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_READ_PROGRAM_MEMORY 0x04    // Read from program memory</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_READ_DATA_MEMORY    0x05    // Read from data memory</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_BEGIN_PROGRAM       0x08    // Begin programming with erase cycle</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_BEGIN_PROGRAM_ONLY  0x18    // Begin programming only cycle</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_END_PROGRAM_ONLY    0x17    // End programming only cycle</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_BULK_ERASE_PROGRAM  0x09    // Bulk erase program memory</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_BULK_ERASE_DATA     0x0B    // Bulk erase data memory</span>
-<span class="preprocessor"></span><span class="preprocessor">#define CMD_CHIP_ERASE          0x1F    // Erase the entire chip</span>
+<span class="preprocessor">#define DELAY_SETTLE    50      // Delay for lines to settle for power off/on</span>
 <span class="preprocessor"></span>
 <span class="comment">// States this application may be in.</span>
 <span class="preprocessor">#define STATE_IDLE      0       // Idle, device is held in the reset state</span>
-<span class="preprocessor"></span><span class="preprocessor">#define STATE_PROGRAM   1       // Active, reading and writing program memory</span>
-<span class="preprocessor"></span><span class="preprocessor">#define STATE_CONFIG    2       // Active, reading and writing config memory</span>
+<span class="preprocessor"></span><span class="preprocessor">#define STATE_PROGRAM   1       // Active, reading and writing memory</span>
 <span class="preprocessor"></span><span class="keywordtype">int</span> state = STATE_IDLE;
 
-<span class="comment">// Flash types.  Uses a similar naming system to picprog.</span>
-<span class="preprocessor">#define EEPROM          0</span>
-<span class="preprocessor"></span><span class="preprocessor">#define FLASH           1</span>
-<span class="preprocessor"></span><span class="preprocessor">#define FLASH4          4</span>
-<span class="preprocessor"></span><span class="preprocessor">#define FLASH5          5</span>
+<span class="comment">// Block select modes within the control byte.</span>
+<span class="preprocessor">#define BSEL_NONE           0</span>
+<span class="preprocessor"></span><span class="preprocessor">#define BSEL_8BIT_ADDR      1</span>
+<span class="preprocessor"></span><span class="preprocessor">#define BSEL_17BIT_ADDR     2</span>
+<span class="preprocessor"></span><span class="preprocessor">#define BSEL_17BIT_ADDR_ALT 3</span>
 <span class="preprocessor"></span>
-<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> pc = 0;           <span class="comment">// Current program counter.</span>
-
-<span class="comment">// Flat address ranges for the various memory spaces.  Defaults to the values</span>
-<span class="comment">// for the PIC16F628A.  &quot;DEVICE&quot; command updates to the correct values later.</span>
-<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> programEnd    = 0x07FF;
-<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> configStart   = 0x2000;
-<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> configEnd     = 0x2007;
-<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> dataStart     = 0x2100;
-<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> dataEnd       = 0x217F;
-<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> reservedStart = 0x0800;
-<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> reservedEnd   = 0x07FF;
-<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>  configSave    = 0x0000;
-byte progFlashType          = FLASH4;
-byte dataFlashType          = EEPROM;
+<span class="keyword">const</span> prog_char *eepromName;
+<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> eepromSize;
+<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> eepromEnd;
+byte eepromI2CAddress;
+byte eepromBlockSelectMode;
+<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> eepromPageSize;
 
 <span class="comment">// Device names, forced out into PROGMEM.</span>
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic12f629[]  PROGMEM = <span class="stringliteral">&quot;pic12f629&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic12f630[]  PROGMEM = <span class="stringliteral">&quot;pic12f630&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic12f675[]  PROGMEM = <span class="stringliteral">&quot;pic12f675&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic12f676[]  PROGMEM = <span class="stringliteral">&quot;pic12f676&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f84[]   PROGMEM = <span class="stringliteral">&quot;pic16f84&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f84a[]  PROGMEM = <span class="stringliteral">&quot;pic16f84a&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f87[]   PROGMEM = <span class="stringliteral">&quot;pic16f87&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f88[]   PROGMEM = <span class="stringliteral">&quot;pic16f88&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f627[]  PROGMEM = <span class="stringliteral">&quot;pic16f627&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f627a[] PROGMEM = <span class="stringliteral">&quot;pic16f627a&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f628[]  PROGMEM = <span class="stringliteral">&quot;pic16f628&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f628a[] PROGMEM = <span class="stringliteral">&quot;pic16f628a&quot;</span>;
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_pic16f648a[] PROGMEM = <span class="stringliteral">&quot;pic16f648a&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc00[]   PROGMEM = <span class="stringliteral">&quot;24lc00&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc01[]   PROGMEM = <span class="stringliteral">&quot;24lc01&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc014[]  PROGMEM = <span class="stringliteral">&quot;24lc014&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc02[]   PROGMEM = <span class="stringliteral">&quot;24lc02&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc024[]  PROGMEM = <span class="stringliteral">&quot;24lc024&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc025[]  PROGMEM = <span class="stringliteral">&quot;24lc025&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc04[]   PROGMEM = <span class="stringliteral">&quot;24lc04&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc08[]   PROGMEM = <span class="stringliteral">&quot;24lc08&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc16[]   PROGMEM = <span class="stringliteral">&quot;24lc16&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc32[]   PROGMEM = <span class="stringliteral">&quot;24lc32&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc64[]   PROGMEM = <span class="stringliteral">&quot;24lc64&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc128[]  PROGMEM = <span class="stringliteral">&quot;24lc128&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc256[]  PROGMEM = <span class="stringliteral">&quot;24lc256&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc512[]  PROGMEM = <span class="stringliteral">&quot;24lc512&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc1025[] PROGMEM = <span class="stringliteral">&quot;24lc1025&quot;</span>;
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_24lc1026[] PROGMEM = <span class="stringliteral">&quot;24lc1026&quot;</span>;
 
 <span class="comment">// List of devices that are currently supported and their properties.</span>
 <span class="comment">// Note: most of these are based on published information and have not</span>
@@ -161,42 +140,60 @@ byte dataFlashType          = EEPROM;
 <span class="keyword">struct </span>deviceInfo
 {
     <span class="keyword">const</span> prog_char *name;      <span class="comment">// User-readable name of the device.</span>
-    prog_int16_t deviceId;      <span class="comment">// Device ID for the PIC (-1 if no id).</span>
-    prog_uint32_t programSize;  <span class="comment">// Size of program memory (words).</span>
-    prog_uint32_t configStart;  <span class="comment">// Flat address start of configuration memory.</span>
-    prog_uint32_t dataStart;    <span class="comment">// Flat address start of EEPROM data memory.</span>
-    prog_uint16_t configSize;   <span class="comment">// Number of configuration words.</span>
-    prog_uint16_t dataSize;     <span class="comment">// Size of EEPROM data memory (bytes).</span>
-    prog_uint16_t reservedWords;<span class="comment">// Reserved program words (e.g. for OSCCAL).</span>
-    prog_uint16_t configSave;   <span class="comment">// Bits in config word to be saved.</span>
-    prog_uint8_t progFlashType; <span class="comment">// Type of flash for program memory.</span>
-    prog_uint8_t dataFlashType; <span class="comment">// Type of flash for data memory.</span>
+    prog_uint32_t size;         <span class="comment">// Size of program memory (bytes).</span>
+    prog_uint16_t pageSize;     <span class="comment">// Size of a page for bulk transfers.</span>
+    prog_uint8_t address;       <span class="comment">// Address on the I2C bus.</span>
+    prog_uint8_t blockSelect;   <span class="comment">// Block select mode.</span>
 
 };
 <span class="keyword">struct </span>deviceInfo const devices[] PROGMEM = {
-    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/41191D.pdf</span>
-    {s_pic12f629,  0x0F80, 1024, 0x2000, 0x2100, 8, 128, 1, 0x3000, FLASH4, EEPROM},
-    {s_pic12f630,  0x10C0, 1024, 0x2000, 0x2100, 8, 128, 1, 0x3000, FLASH4, EEPROM},
-    {s_pic12f675,  0x0FC0, 1024, 0x2000, 0x2100, 8, 128, 1, 0x3000, FLASH4, EEPROM},
-    {s_pic12f676,  0x10E0, 1024, 0x2000, 0x2100, 8, 128, 1, 0x3000, FLASH4, EEPROM},
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21178H.pdf</span>
+    {s_24lc00, 16UL, 1, 0xA0, BSEL_8BIT_ADDR},
 
-    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/30262e.pdf</span>
-    {s_pic16f84,   -1,     1024, 0x2000, 0x2100, 8,  64, 0, 0, FLASH,  EEPROM},
-    {s_pic16f84a,  0x0560, 1024, 0x2000, 0x2100, 8,  64, 0, 0, FLASH,  EEPROM},
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21711J.pdf</span>
+    {s_24lc01, 128UL, 8, 0xA0, BSEL_8BIT_ADDR},
 
-    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/39607c.pdf</span>
-    {s_pic16f87,   0x0720, 4096, 0x2000, 0x2100, 9, 256, 0, 0, FLASH5, EEPROM},
-    {s_pic16f88,   0x0760, 4096, 0x2000, 0x2100, 9, 256, 0, 0, FLASH5, EEPROM},
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21809G.pdf</span>
+    {s_24lc014, 128UL, 16, 0xA0, BSEL_8BIT_ADDR},
 
-    <span class="comment">// 627/628:  http://ww1.microchip.com/downloads/en/DeviceDoc/30034d.pdf</span>
-    <span class="comment">// A series: http://ww1.microchip.com/downloads/en/DeviceDoc/41196g.pdf</span>
-    {s_pic16f627,  0x07A0, 1024, 0x2000, 0x2100, 8, 128, 0, 0, FLASH,  EEPROM},
-    {s_pic16f627a, 0x1040, 1024, 0x2000, 0x2100, 8, 128, 0, 0, FLASH4, EEPROM},
-    {s_pic16f628,  0x07C0, 2048, 0x2000, 0x2100, 8, 128, 0, 0, FLASH,  EEPROM},
-    {s_pic16f628a, 0x1060, 2048, 0x2000, 0x2100, 8, 128, 0, 0, FLASH4, EEPROM},
-    {s_pic16f648a, 0x1100, 4096, 0x2000, 0x2100, 8, 256, 0, 0, FLASH4, EEPROM},
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21709J.pdf</span>
+    {s_24lc02, 256UL, 8, 0xA0, BSEL_8BIT_ADDR},
 
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21210N.pdf</span>
+    {s_24lc024, 256UL, 16, 0xA0, BSEL_8BIT_ADDR},
+    {s_24lc025, 256UL, 16, 0xA0, BSEL_8BIT_ADDR},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21708K.pdf</span>
+    {s_24lc04, 512UL, 16, 0xA0, BSEL_8BIT_ADDR},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21710K.pdf</span>
+    {s_24lc08, 1024UL, 16, 0xA0, BSEL_8BIT_ADDR},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21703K.pdf</span>
+    {s_24lc16, 2048UL, 16, 0xA0, BSEL_8BIT_ADDR},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21713M.pdf</span>
+    {s_24lc32, 4096UL, 32, 0xA0, BSEL_NONE},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21189S.pdf</span>
+    {s_24lc64, 8192UL, 32, 0xA0, BSEL_NONE},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21191s.pdf</span>
+    {s_24lc128, 16384UL, 64, 0xA0, BSEL_NONE},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21203R.pdf</span>
+    {s_24lc256, 32768UL, 64, 0xA0, BSEL_NONE},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21754M.pdf</span>
+    {s_24lc512, 65536UL, 128, 0xA0, BSEL_NONE},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/21941K.pdf</span>
+    {s_24lc1025, 131072UL, 128, 0xA0, BSEL_17BIT_ADDR_ALT},
+
+    <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/22270C.pdf</span>
+    {s_24lc1026, 131072UL, 128, 0xA0, BSEL_17BIT_ADDR},
+
+    {0, 0, 0, 0, 0}
 };
 
 <span class="comment">// Buffer for command-line character input and READBIN data packets.</span>
@@ -212,15 +209,20 @@ byte dataFlashType          = EEPROM;
     <span class="comment">// Need a serial link to the host.</span>
     Serial.begin(9600);
 
-    <span class="comment">// Hold the PIC in the powered down/reset state until we are ready for it.</span>
+    <span class="comment">// Initialize the defaults for the 24LC256.</span>
+    setDefaultDeviceInfo();
+
+    <span class="comment">// Hold the chip in the powered down/reset state until we are ready for it.</span>
     pinMode(PIN_MCLR, OUTPUT);
     pinMode(PIN_VDD, OUTPUT);
     digitalWrite(PIN_MCLR, MCLR_RESET);
     digitalWrite(PIN_VDD, LOW);
 
-    <span class="comment">// Clock and data are floating until the first PIC command.</span>
-    pinMode(PIN_CLOCK, INPUT);
-    pinMode(PIN_DATA, INPUT);
+    <span class="comment">// Initially set the CLOCK and DATA lines to be outputs in the high state.</span>
+    pinMode(PIN_CLOCK, OUTPUT);
+    pinMode(PIN_DATA, OUTPUT);
+    digitalWrite(PIN_CLOCK, HIGH);
+    digitalWrite(PIN_DATA, HIGH);
 
     <span class="comment">// Turn off the activity LED initially.</span>
     pinMode(PIN_ACTIVITY, OUTPUT);
@@ -304,147 +306,61 @@ byte dataFlashType          = EEPROM;
     Serial.println(<span class="stringliteral">&quot;ProgramPIC 1.0&quot;</span>);
 }
 
-<span class="comment">// Initialize device properties from the &quot;devices&quot; list and</span>
-<span class="comment">// print them to the serial port.  Note: &quot;dev&quot; is in PROGMEM.</span>
-<span class="keywordtype">void</span> initDevice(<span class="keyword">const</span> <span class="keyword">struct</span> deviceInfo *dev)
+<span class="comment">// Set the defaults for the 24LC256.</span>
+<span class="keywordtype">void</span> setDefaultDeviceInfo()
 {
-    <span class="comment">// Update the global device details.</span>
-    programEnd = pgm_read_dword(&amp;(dev-&gt;programSize)) - 1;
-    configStart = pgm_read_dword(&amp;(dev-&gt;configStart));
-    configEnd = configStart + pgm_read_word(&amp;(dev-&gt;configSize)) - 1;
-    dataStart = pgm_read_dword(&amp;(dev-&gt;dataStart));
-    dataEnd = dataStart + pgm_read_word(&amp;(dev-&gt;dataSize)) - 1;
-    reservedStart = programEnd - pgm_read_word(&amp;(dev-&gt;reservedWords)) + 1;
-    reservedEnd = programEnd;
-    configSave = pgm_read_word(&amp;(dev-&gt;configSave));
-    progFlashType = pgm_read_byte(&amp;(dev-&gt;progFlashType));
-    dataFlashType = pgm_read_byte(&amp;(dev-&gt;dataFlashType));
-
-    <span class="comment">// Print the extra device information.</span>
-    Serial.print(<span class="stringliteral">&quot;DeviceName: &quot;</span>);
-    printProgString((<span class="keyword">const</span> prog_char *)(pgm_read_word(&amp;(dev-&gt;name))));
-    Serial.println();
-    Serial.print(<span class="stringliteral">&quot;ProgramRange: 0000-&quot;</span>);
-    printHex8(programEnd);
-    Serial.println();
-    Serial.print(<span class="stringliteral">&quot;ConfigRange: &quot;</span>);
-    printHex8(configStart);
-    Serial.print(<span class="charliteral">&#39;-&#39;</span>);
-    printHex8(configEnd);
-    Serial.println();
-    <span class="keywordflow">if</span> (configSave != 0) {
-        Serial.print(<span class="stringliteral">&quot;ConfigSave: &quot;</span>);
-        printHex4(configSave);
-        Serial.println();
-    }
-    Serial.print(<span class="stringliteral">&quot;DataRange: &quot;</span>);
-    printHex8(dataStart);
-    Serial.print(<span class="charliteral">&#39;-&#39;</span>);
-    printHex8(dataEnd);
-    Serial.println();
-    <span class="keywordflow">if</span> (reservedStart &lt;= reservedEnd) {
-        Serial.print(<span class="stringliteral">&quot;ReservedRange: &quot;</span>);
-        printHex8(reservedStart);
-        Serial.print(<span class="charliteral">&#39;-&#39;</span>);
-        printHex8(reservedEnd);
-        Serial.println();
-    }
+    eepromName = s_24lc256;
+    eepromSize = 32768UL;
+    eepromEnd = (eepromSize / 2) - 1;
+    eepromI2CAddress = 0xA0;
+    eepromBlockSelectMode = BSEL_NONE;
+    eepromPageSize = 64;
 }
 
-<span class="comment">// Offsets of interesting config locations that contain device information.</span>
-<span class="preprocessor">#define DEV_USERID0         0</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DEV_USERID1         1</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DEV_USERID2         2</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DEV_USERID3         3</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DEV_ID              6</span>
-<span class="preprocessor"></span><span class="preprocessor">#define DEV_CONFIG_WORD     7</span>
-<span class="preprocessor"></span>
+<span class="comment">// Print the device information.</span>
+<span class="keywordtype">void</span> printDeviceInfo()
+{
+    Serial.print(<span class="stringliteral">&quot;DeviceName: &quot;</span>);
+    printProgString(eepromName);
+    Serial.println();
+    Serial.print(<span class="stringliteral">&quot;DataRange: 0000-&quot;</span>);
+    printHex8(eepromEnd);
+    Serial.println();
+    Serial.println(<span class="stringliteral">&quot;DataBits: 16&quot;</span>);
+}
+
+<span class="comment">// Initialize device properties from the &quot;devices&quot; list.</span>
+<span class="comment">// Note: &quot;dev&quot; is in PROGMEM.</span>
+<span class="keywordtype">void</span> initDevice(<span class="keyword">const</span> <span class="keyword">struct</span> deviceInfo *dev)
+{
+    eepromName = (<span class="keyword">const</span> prog_char *)pgm_read_word(&amp;(dev-&gt;name));
+    eepromSize = pgm_read_dword(&amp;(dev-&gt;size));
+    eepromEnd = (eepromSize / 2) - 1;
+    eepromI2CAddress = pgm_read_byte(&amp;(dev-&gt;address));
+    eepromBlockSelectMode = pgm_read_byte(&amp;(dev-&gt;blockSelect));
+    eepromPageSize = pgm_read_word(&amp;(dev-&gt;pageSize));
+}
+
 <span class="comment">// DEVICE command.</span>
 <span class="keywordtype">void</span> cmdDevice(<span class="keyword">const</span> <span class="keywordtype">char</span> *args)
 {
-    <span class="comment">// Make sure the device is reset before we start.</span>
+    <span class="comment">// Start with the chip powered off.</span>
     exitProgramMode();
 
-    <span class="comment">// Read identifiers and configuration words from config memory.</span>
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> userid0 = readConfigWord(DEV_USERID0);
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> userid1 = readConfigWord(DEV_USERID1);
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> userid2 = readConfigWord(DEV_USERID2);
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> userid3 = readConfigWord(DEV_USERID3);
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> deviceId = readConfigWord(DEV_ID);
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> configWord = readConfigWord(DEV_CONFIG_WORD);
-
-    <span class="comment">// If the device ID is all-zeroes or all-ones, then it could mean</span>
-    <span class="comment">// one of the following:</span>
-    <span class="comment">//</span>
-    <span class="comment">// 1. There is no PIC in the programming socket.</span>
-    <span class="comment">// 2. The VPP programming voltage is not available.</span>
-    <span class="comment">// 3. Code protection is enabled and the PIC is unreadable.</span>
-    <span class="comment">// 4. The PIC is an older model with no device identifier.</span>
-    <span class="comment">//</span>
-    <span class="comment">// Case 4 is the interesting one.  We look for any word in configuration</span>
-    <span class="comment">// memory or the first 16 words of program memory that is non-zero.</span>
-    <span class="comment">// If we find a non-zero word, we assume that we have a PIC but we</span>
-    <span class="comment">// cannot detect what type it is.</span>
-    <span class="keywordflow">if</span> (deviceId == 0 || deviceId == 0x3FFF) {
-        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> word = userid0 | userid1 | userid2 | userid3 | configWord;
-        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> addr = 0;
-        <span class="keywordflow">while</span> (!word &amp;&amp; addr &lt; 16) {
-            word |= readWord(addr);
-            ++addr;
-        }
-        <span class="keywordflow">if</span> (!word) {
-            Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
-            exitProgramMode();
-            <span class="keywordflow">return</span>;
-        }
-        deviceId = 0;
+    <span class="comment">// Probe the I2C bus to see if we have a working EEPROM.</span>
+    setDefaultDeviceInfo();
+    <span class="keywordflow">if</span> (!probeDevice()) {
+        Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
+        <span class="keywordflow">return</span>;
     }
 
     Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
 
-    Serial.print(<span class="stringliteral">&quot;DeviceID: &quot;</span>);
-    printHex4(deviceId);
-    Serial.println();
+    Serial.println(<span class="stringliteral">&quot;DeviceID: 0000&quot;</span>);
 
-    <span class="comment">// Find the device in the built-in list if we have details for it.</span>
-    <span class="keywordtype">int</span> index = 0;
-    <span class="keywordflow">for</span> (;;) {
-        <span class="keyword">const</span> prog_char *name = (<span class="keyword">const</span> prog_char *)
-            (pgm_read_word(&amp;(devices[index].name)));
-        <span class="keywordflow">if</span> (!name) {
-            index = -1;
-            <span class="keywordflow">break</span>;
-        }
-        <span class="keywordtype">int</span> <span class="keywordtype">id</span> = pgm_read_word(&amp;(devices[index].deviceId));
-        <span class="keywordflow">if</span> (<span class="keywordtype">id</span> == (deviceId &amp; 0xFFE0))
-            <span class="keywordflow">break</span>;
-        ++index;
-    }
-    <span class="keywordflow">if</span> (index &gt;= 0) {
-        initDevice(&amp;(devices[index]));
-    } <span class="keywordflow">else</span> {
-        <span class="comment">// Reset the global parameters to their defaults.  A separate</span>
-        <span class="comment">// &quot;SETDEVICE&quot; command will be needed to set the correct values.</span>
-        programEnd    = 0x07FF;
-        configStart   = 0x2000;
-        configEnd     = 0x2007;
-        dataStart     = 0x2100;
-        dataEnd       = 0x217F;
-        reservedStart = 0x0800;
-        reservedEnd   = 0x07FF;
-        configSave    = 0x0000;
-        progFlashType = FLASH4;
-        dataFlashType = EEPROM;
-    }
-
-    Serial.print(<span class="stringliteral">&quot;ConfigWord: &quot;</span>);
-    printHex4(configWord);
-    Serial.println();
+    printDeviceInfo();
 
     Serial.println(<span class="stringliteral">&quot;.&quot;</span>);
-
-    <span class="comment">// Don&#39;t need programming mode once the details have been read.</span>
-    exitProgramMode();
 }
 
 <span class="comment">// DEVICES command.</span>
@@ -465,8 +381,8 @@ byte dataFlashType          = EEPROM;
                 Serial.print(<span class="charliteral">&#39; &#39;</span>);
         }
         printProgString(name);
-        <span class="keywordtype">int</span> <span class="keywordtype">id</span> = (int)(pgm_read_word(&amp;(devices[index].deviceId)));
-        <span class="keywordflow">if</span> (<span class="keywordtype">id</span> != -1)
+        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> size = pgm_read_dword(&amp;(devices[index].size));
+        <span class="keywordflow">if</span> (size == 32768UL)    <span class="comment">// 24LC256 is the default</span>
             Serial.print(<span class="charliteral">&#39;*&#39;</span>);
         ++index;
     }
@@ -477,6 +393,9 @@ byte dataFlashType          = EEPROM;
 <span class="comment">// SETDEVICE command.</span>
 <span class="keywordtype">void</span> cmdSetDevice(<span class="keyword">const</span> <span class="keywordtype">char</span> *args)
 {
+    <span class="comment">// Start with the chip powered off.</span>
+    exitProgramMode();
+
     <span class="comment">// Extract the name of the device from the command arguments.</span>
     <span class="keywordtype">int</span> len = 0;
     <span class="keywordflow">for</span> (;;) {
@@ -494,14 +413,22 @@ byte dataFlashType          = EEPROM;
         <span class="keywordflow">if</span> (!name)
             <span class="keywordflow">break</span>;
         <span class="keywordflow">if</span> (matchString(name, args, len)) {
-            Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
             initDevice(&amp;(devices[index]));
+            <span class="keywordflow">if</span> (!probeDevice()) {
+                <span class="comment">// No device on the bus.</span>
+                setDefaultDeviceInfo();
+                Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
+                exitProgramMode();
+                <span class="keywordflow">return</span>;
+            }
+            Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
+            printDeviceInfo();
             Serial.println(<span class="stringliteral">&quot;.&quot;</span>);
-            exitProgramMode(); <span class="comment">// Force a reset upon the next command.</span>
             <span class="keywordflow">return</span>;
         }
         ++index;
     }
+    setDefaultDeviceInfo();
     Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
 }
 
@@ -556,14 +483,8 @@ byte dataFlashType          = EEPROM;
 
     <span class="comment">// Check that both start and end are within the same memory area</span>
     <span class="comment">// and within the bounds of that memory area.</span>
-    <span class="keywordflow">if</span> (*start &lt;= programEnd) {
-        <span class="keywordflow">if</span> (*end &gt; programEnd)
-            <span class="keywordflow">return</span> <span class="keyword">false</span>;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (*start &gt;= configStart &amp;&amp; *start &lt;= configEnd) {
-        <span class="keywordflow">if</span> (*end &lt; configStart || *end &gt; configEnd)
-            <span class="keywordflow">return</span> <span class="keyword">false</span>;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (*start &gt;= dataStart &amp;&amp; *start &lt;= dataEnd) {
-        <span class="keywordflow">if</span> (*end &lt; dataStart || *end &gt; dataEnd)
+    <span class="keywordflow">if</span> (*start &lt;= eepromEnd) {
+        <span class="keywordflow">if</span> (*end &gt; eepromEnd)
             <span class="keywordflow">return</span> <span class="keyword">false</span>;
     } <span class="keywordflow">else</span> {
         <span class="keywordflow">return</span> <span class="keyword">false</span>;
@@ -580,11 +501,16 @@ byte dataFlashType          = EEPROM;
         Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
         <span class="keywordflow">return</span>;
     }
+    <span class="keywordflow">if</span> (!startRead(start)) {
+        <span class="comment">// No device on the bus.</span>
+        Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
+        <span class="keywordflow">return</span>;
+    }
     Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
     <span class="keywordtype">int</span> count = 0;
     <span class="keywordtype">bool</span> activity = <span class="keyword">true</span>;
     <span class="keywordflow">while</span> (start &lt;= end) {
-        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> word = readWord(start);
+        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> word = readWord(start == end);
         <span class="keywordflow">if</span> (count &gt; 0) {
             <span class="keywordflow">if</span> ((count % 8) == 0)
                 Serial.println();
@@ -616,12 +542,17 @@ byte dataFlashType          = EEPROM;
         Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
         <span class="keywordflow">return</span>;
     }
+    <span class="keywordflow">if</span> (!startRead(start)) {
+        <span class="comment">// No device on the bus.</span>
+        Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
+        <span class="keywordflow">return</span>;
+    }
     Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
     <span class="keywordtype">int</span> count = 0;
     <span class="keywordtype">bool</span> activity = <span class="keyword">true</span>;
     <span class="keywordtype">size_t</span> offset = 0;
     <span class="keywordflow">while</span> (start &lt;= end) {
-        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> word = readWord(start);
+        <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> word = readWord(start == end);
         buffer[++offset] = (char)word;
         buffer[++offset] = (char)(word &gt;&gt; 8);
         <span class="keywordflow">if</span> (offset &gt;= BINARY_TRANSFER_MAX) {
@@ -663,17 +594,14 @@ byte dataFlashType          = EEPROM;
         <span class="keywordflow">return</span>;
     }
     args += size;
-    <span class="keywordflow">if</span> (addr &lt;= programEnd) {
-        limit = programEnd;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (addr &gt;= configStart &amp;&amp; addr &lt;= configEnd) {
-        limit = configEnd;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (addr &gt;= dataStart &amp;&amp; addr &lt;= dataEnd) {
-        limit = dataEnd;
+    <span class="keywordflow">if</span> (addr &lt;= eepromEnd) {
+        limit = eepromEnd;
     } <span class="keywordflow">else</span> {
         <span class="comment">// Address is not within one of the valid ranges.</span>
         Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
         <span class="keywordflow">return</span>;
     }
+    startWrite(addr);
     <span class="keywordtype">int</span> count = 0;
     <span class="keywordflow">for</span> (;;) {
         <span class="keywordflow">while</span> (*args == <span class="charliteral">&#39; &#39;</span> || *args == <span class="charliteral">&#39;\t&#39;</span>)
@@ -681,28 +609,33 @@ byte dataFlashType          = EEPROM;
         <span class="keywordflow">if</span> (*args == <span class="charliteral">&#39;\0&#39;</span>)
             <span class="keywordflow">break</span>;
         <span class="keywordflow">if</span> (*args == <span class="charliteral">&#39;-&#39;</span>) {
+            stopWrite();
             Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
             <span class="keywordflow">return</span>;
         }
         size = parseHex(args, &amp;value);
         <span class="keywordflow">if</span> (!size) {
+            stopWrite();
             Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
             <span class="keywordflow">return</span>;
         }
         args += size;
         <span class="keywordflow">if</span> (addr &gt; limit) {
             <span class="comment">// We&#39;ve reached the limit of this memory area, so fail.</span>
+            stopWrite();
             Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
             <span class="keywordflow">return</span>;
         }
-        <span class="keywordflow">if</span> (!writeWord(addr, (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
+        <span class="keywordflow">if</span> (!writeWord((<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
             <span class="comment">// The actual write to the device failed.</span>
+            stopWrite();
             Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
             <span class="keywordflow">return</span>;
         }
         ++addr;
         ++count;
     }
+    stopWrite();
     <span class="keywordflow">if</span> (!count) {
         <span class="comment">// Missing word argument.</span>
         Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
@@ -731,17 +664,14 @@ byte dataFlashType          = EEPROM;
         <span class="keywordflow">return</span>;
     }
     args += size;
-    <span class="keywordflow">if</span> (addr &lt;= programEnd) {
-        limit = programEnd;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (addr &gt;= configStart &amp;&amp; addr &lt;= configEnd) {
-        limit = configEnd;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (addr &gt;= dataStart &amp;&amp; addr &lt;= dataEnd) {
-        limit = dataEnd;
+    <span class="keywordflow">if</span> (addr &lt;= eepromEnd) {
+        limit = eepromEnd;
     } <span class="keywordflow">else</span> {
         <span class="comment">// Address is not within one of the valid ranges.</span>
         Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
         <span class="keywordflow">return</span>;
     }
+    startWrite(addr);
     Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
     <span class="keywordtype">int</span> count = 0;
     <span class="keywordtype">bool</span> activity = <span class="keyword">true</span>;
@@ -773,14 +703,16 @@ byte dataFlashType          = EEPROM;
         <span class="keywordflow">for</span> (<span class="keywordtype">int</span> posn = 0; posn &lt; (len - 1); posn += 2) {
             <span class="keywordflow">if</span> (addr &gt; limit) {
                 <span class="comment">// We&#39;ve reached the limit of this memory area, so fail.</span>
+                stopWrite();
                 Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
                 <span class="keywordflow">return</span>;
             }
             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> value =
                 (((<span class="keywordtype">unsigned</span> int)buffer[posn]) &amp; 0xFF) |
                 ((((<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)buffer[posn + 1]) &amp; 0xFF) &lt;&lt; 8);
-            <span class="keywordflow">if</span> (!writeWord(addr, (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
+            <span class="keywordflow">if</span> (!writeWord((<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
                 <span class="comment">// The actual write to the device failed.</span>
+                stopWrite();
                 Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
                 <span class="keywordflow">return</span>;
             }
@@ -799,118 +731,17 @@ byte dataFlashType          = EEPROM;
         <span class="comment">// All words in this packet have been written successfully.</span>
         Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
     }
+    stopWrite();
     Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
 }
-
-<span class="keyword">const</span> <span class="keywordtype">char</span> s_noPreserve[] PROGMEM = <span class="stringliteral">&quot;NOPRESERVE&quot;</span>;
 
 <span class="comment">// ERASE command.</span>
 <span class="keywordtype">void</span> cmdErase(<span class="keyword">const</span> <span class="keywordtype">char</span> *args)
 {
-    <span class="comment">// Was the &quot;NOPRESERVE&quot; option given?</span>
-    <span class="keywordtype">int</span> len = 0;
-    <span class="keywordflow">while</span> (args[len] != <span class="charliteral">&#39;\0&#39;</span> &amp;&amp; args[len] != <span class="charliteral">&#39; &#39;</span> &amp;&amp; args[len] != <span class="charliteral">&#39;\t&#39;</span>)
-        ++len;
-    <span class="keywordtype">bool</span> preserve = !matchString(s_noPreserve, args, len);
-
-    <span class="comment">// Preserve reserved words if necessary.</span>
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *reserved = 0;
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> configWord = 0x3FFF;
-    <span class="keywordflow">if</span> (preserve &amp;&amp; reservedStart &lt;= reservedEnd) {
-        <span class="keywordtype">size_t</span> size = ((size_t)(reservedEnd - reservedStart + 1))
-            * <span class="keyword">sizeof</span>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>);
-        reserved = (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *)malloc(size);
-        <span class="keywordflow">if</span> (reserved) {
-            <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr = reservedStart;
-            <span class="keywordtype">int</span> offset = 0;
-            <span class="keywordflow">while</span> (addr &lt;= reservedEnd) {
-                reserved[offset] = readWord(addr);
-                ++addr;
-                ++offset;
-            }
-        } <span class="keywordflow">else</span> {
-            <span class="comment">// If we cannot preserve the reserved words, then abort now.</span>
-            Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
-            <span class="keywordflow">return</span>;
-        }
-    }
-    <span class="keywordflow">if</span> (configSave != 0) {
-        <span class="comment">// Some of the bits in the configuration word must also be saved.</span>
-        <span class="comment">// We always preserve these, even if NOPRESERVE is given because of</span>
-        <span class="comment">// the check in writeWord() that prevents new bits from ever</span>
-        <span class="comment">// being written to the preserved bits in the configuration word.</span>
-        configWord &amp;= ~configSave;
-        configWord |= readWord(configStart + DEV_CONFIG_WORD) &amp; configSave;
-    }
-
-    <span class="comment">// Perform the memory type specific erase sequence.</span>
-    <span class="keywordflow">switch</span> (progFlashType) {
-    <span class="keywordflow">case</span> FLASH4:
-        setErasePC();
-        sendSimpleCommand(CMD_BULK_ERASE_PROGRAM);
-        delayMicroseconds(DELAY_TFULLERA);
-        sendSimpleCommand(CMD_BULK_ERASE_DATA);
-        <span class="keywordflow">break</span>;
-    <span class="keywordflow">case</span> FLASH5:
-        setErasePC();
-        sendSimpleCommand(CMD_CHIP_ERASE);
-        <span class="keywordflow">break</span>;
-    <span class="keywordflow">default</span>:
-        <span class="comment">// Details for disabling code protection and erasing all memory</span>
-        <span class="comment">// for PIC16F84/PIC16F84A comes from this doc, section 4.1:</span>
-        <span class="comment">// http://ww1.microchip.com/downloads/en/DeviceDoc/30262e.pdf</span>
-        setErasePC();
-        <span class="keywordflow">for</span> (<span class="keywordtype">int</span> count = 0; count &lt; 7; ++count)
-            sendSimpleCommand(CMD_INCREMENT_ADDRESS); <span class="comment">// Advance to 0x2007</span>
-        sendSimpleCommand(0x01);    <span class="comment">// Command 1</span>
-        sendSimpleCommand(0x07);    <span class="comment">// Command 7</span>
-        sendSimpleCommand(CMD_BEGIN_PROGRAM);
-        delayMicroseconds(DELAY_TFULL84);
-        sendSimpleCommand(0x01);    <span class="comment">// Command 1</span>
-        sendSimpleCommand(0x07);    <span class="comment">// Command 7</span>
-
-        <span class="comment">// Some FLASH devices need the data memory to be erased separately.</span>
-        sendWriteCommand(CMD_LOAD_DATA_MEMORY, 0x3FFF);
-        sendSimpleCommand(CMD_BULK_ERASE_DATA);
-        sendSimpleCommand(CMD_BEGIN_PROGRAM);
-        <span class="keywordflow">break</span>;
-    }
-
-    <span class="comment">// Wait until the chip is fully erased.</span>
-    delayMicroseconds(DELAY_TFULLERA);
-
-    <span class="comment">// Force the device to reset after it has been erased.</span>
-    exitProgramMode();
-    enterProgramMode();
-
-    <span class="comment">// Write the reserved words back to program memory.</span>
-    <span class="keywordflow">if</span> (reserved) {
-        <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr = reservedStart;
-        <span class="keywordtype">int</span> offset = 0;
-        <span class="keywordtype">bool</span> ok = <span class="keyword">true</span>;
-        <span class="keywordflow">while</span> (addr &lt;= reservedEnd) {
-            <span class="keywordflow">if</span> (!writeWord(addr, reserved[offset]))
-                ok = <span class="keyword">false</span>;
-            ++addr;
-            ++offset;
-        }
-        free(reserved);
-        <span class="keywordflow">if</span> (!ok) {
-            <span class="comment">// Reserved words did not read back correctly.</span>
-            Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
-            <span class="keywordflow">return</span>;
-        }
-    }
-
-    <span class="comment">// Forcibly write 0x3FFF over the configuration words as erase</span>
-    <span class="comment">// sometimes won&#39;t reset the words (e.g. PIC16F628A).  If the</span>
-    <span class="comment">// write fails, then leave the words as-is - don&#39;t report the failure.</span>
-    <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> configAddr = configStart + DEV_CONFIG_WORD;
-            configAddr &lt;= configEnd; ++configAddr)
-        writeWord(configAddr, configWord);
-
-    <span class="comment">// Done.</span>
-    Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
+    <span class="keywordflow">if</span> (eraseAll())
+        Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
+    <span class="keywordflow">else</span>
+        Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
 }
 
 <span class="comment">// PWROFF command.</span>
@@ -1076,36 +907,31 @@ byte dataFlashType          = EEPROM;
     Serial.println(<span class="stringliteral">&quot;NOTSUPPORTED&quot;</span>);
 }
 
-<span class="comment">// Enter high voltage programming mode.</span>
+<span class="comment">// Enter programming mode.</span>
 <span class="keywordtype">void</span> enterProgramMode()
 {
     <span class="comment">// Bail out if already in programming mode.</span>
     <span class="keywordflow">if</span> (state != STATE_IDLE)
         <span class="keywordflow">return</span>;
 
-    <span class="comment">// Lower MCLR, VDD, DATA, and CLOCK initially.  This will put the</span>
-    <span class="comment">// PIC into the powered-off, reset state just in case.</span>
-    digitalWrite(PIN_MCLR, MCLR_RESET);
+    <span class="comment">// Lower VDD, which will power off the chip just in case.</span>
     digitalWrite(PIN_VDD, LOW);
-    digitalWrite(PIN_DATA, LOW);
-    digitalWrite(PIN_CLOCK, LOW);
+
+    <span class="comment">// Make sure that CLOCK and DATA are high.</span>
+    pinMode(PIN_CLOCK, OUTPUT);
+    pinMode(PIN_DATA, OUTPUT);
+    digitalWrite(PIN_CLOCK, HIGH);
+    digitalWrite(PIN_DATA, HIGH);
 
     <span class="comment">// Wait for the lines to settle.</span>
     delayMicroseconds(DELAY_SETTLE);
 
-    <span class="comment">// Switch DATA and CLOCK into outputs.</span>
-    pinMode(PIN_DATA, OUTPUT);
-    pinMode(PIN_CLOCK, OUTPUT);
-
-    <span class="comment">// Raise MCLR, then VDD.</span>
-    digitalWrite(PIN_MCLR, MCLR_VPP);
-    delayMicroseconds(DELAY_TPPDP);
+    <span class="comment">// Raise VDD.</span>
     digitalWrite(PIN_VDD, HIGH);
-    delayMicroseconds(DELAY_THLD0);
+    delayMicroseconds(DELAY_SETTLE);
 
-    <span class="comment">// Now in program mode, starting at the first word of program memory.</span>
+    <span class="comment">// Now in program mode, address not set yet.</span>
     state = STATE_PROGRAM;
-    pc = 0;
 }
 
 <span class="comment">// Exit programming mode and reset the device.</span>
@@ -1115,236 +941,285 @@ byte dataFlashType          = EEPROM;
     <span class="keywordflow">if</span> (state == STATE_IDLE)
         <span class="keywordflow">return</span>;
 
-    <span class="comment">// Lower MCLR, VDD, DATA, and CLOCK.</span>
-    digitalWrite(PIN_MCLR, MCLR_RESET);
+    <span class="comment">// Lower VDD.</span>
     digitalWrite(PIN_VDD, LOW);
-    digitalWrite(PIN_DATA, LOW);
-    digitalWrite(PIN_CLOCK, LOW);
 
-    <span class="comment">// Float the DATA and CLOCK pins.</span>
-    pinMode(PIN_DATA, INPUT);
-    pinMode(PIN_CLOCK, INPUT);
-
-    <span class="comment">// Now in the idle state with the PIC powered off.</span>
-    state = STATE_IDLE;
-    pc = 0;
-}
-
-<span class="comment">// Send a command to the PIC.</span>
-<span class="keywordtype">void</span> sendCommand(byte cmd)
-{
-    <span class="keywordflow">for</span> (byte bit = 0; bit &lt; 6; ++bit) {
-        digitalWrite(PIN_CLOCK, HIGH);
-        <span class="keywordflow">if</span> (cmd &amp; 1)
-            digitalWrite(PIN_DATA, HIGH);
-        <span class="keywordflow">else</span>
-            digitalWrite(PIN_DATA, LOW);
-        delayMicroseconds(DELAY_TSET1);
-        digitalWrite(PIN_CLOCK, LOW);
-        delayMicroseconds(DELAY_THLD1);
-        cmd &gt;&gt;= 1;
-    }
-}
-
-<span class="comment">// Send a command to the PIC that has no arguments.</span>
-<span class="keywordtype">void</span> sendSimpleCommand(byte cmd)
-{
-    sendCommand(cmd);
-    delayMicroseconds(DELAY_TDLY2);
-}
-
-<span class="comment">// Send a command to the PIC that writes a data argument.</span>
-<span class="keywordtype">void</span> sendWriteCommand(byte cmd, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> data)
-{
-    sendCommand(cmd);
-    delayMicroseconds(DELAY_TDLY2);
-    <span class="keywordflow">for</span> (byte bit = 0; bit &lt; 16; ++bit) {
-        digitalWrite(PIN_CLOCK, HIGH);
-        <span class="keywordflow">if</span> (data &amp; 1)
-            digitalWrite(PIN_DATA, HIGH);
-        <span class="keywordflow">else</span>
-            digitalWrite(PIN_DATA, LOW);
-        delayMicroseconds(DELAY_TSET1);
-        digitalWrite(PIN_CLOCK, LOW);
-        delayMicroseconds(DELAY_THLD1);
-        data &gt;&gt;= 1;
-    }
-    delayMicroseconds(DELAY_TDLY2);
-}
-
-<span class="comment">// Send a command to the PIC that reads back a data value.</span>
-<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> sendReadCommand(byte cmd)
-{
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> data = 0;
-    sendCommand(cmd);
-    digitalWrite(PIN_DATA, LOW);
-    pinMode(PIN_DATA, INPUT);
-    delayMicroseconds(DELAY_TDLY2);
-    <span class="keywordflow">for</span> (byte bit = 0; bit &lt; 16; ++bit) {
-        data &gt;&gt;= 1;
-        digitalWrite(PIN_CLOCK, HIGH);
-        delayMicroseconds(DELAY_TDLY3);
-        <span class="keywordflow">if</span> (digitalRead(PIN_DATA))
-            data |= 0x8000;
-        digitalWrite(PIN_CLOCK, LOW);
-        delayMicroseconds(DELAY_THLD1);
-    }
+    <span class="comment">// Return the CLOCK and DATA lines to the pulled-high state.</span>
+    pinMode(PIN_CLOCK, OUTPUT);
     pinMode(PIN_DATA, OUTPUT);
-    delayMicroseconds(DELAY_TDLY2);
-    <span class="keywordflow">return</span> data;
+    digitalWrite(PIN_CLOCK, HIGH);
+    digitalWrite(PIN_DATA, HIGH);
+
+    <span class="comment">// Now in the idle state with the chip powered off.</span>
+    state = STATE_IDLE;
 }
 
-<span class="comment">// Set the program counter to a specific &quot;flat&quot; address.</span>
-<span class="keywordtype">void</span> setPC(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr)
+<span class="comment">// Details of the I2C protocol here: http://en.wikipedia.org/wiki/I2C</span>
+<span class="comment">// Assumptions: only one master, no arbitration, and no clock stretching.</span>
+
+<span class="preprocessor">#define i2cDelay()  delayMicroseconds(5)</span>
+<span class="preprocessor"></span>
+<span class="keywordtype">bool</span> started = <span class="keyword">false</span>;
+
+<span class="keywordtype">void</span> i2cStart()
 {
-    <span class="keywordflow">if</span> (addr &gt;= dataStart &amp;&amp; addr &lt;= dataEnd) {
-        <span class="comment">// Data memory.</span>
-        addr -= dataStart;
-        <span class="keywordflow">if</span> (state != STATE_PROGRAM || addr &lt; pc) {
-            <span class="comment">// Device is off, currently looking at configuration memory,</span>
-            <span class="comment">// or the address is further back.  Reset the device.</span>
-            exitProgramMode();
-            enterProgramMode();
+    pinMode(PIN_DATA, OUTPUT);
+    <span class="keywordflow">if</span> (started) {
+        <span class="comment">// Already started, so send a restart condition.</span>
+        digitalWrite(PIN_DATA, HIGH);
+        digitalWrite(PIN_CLOCK, HIGH);
+        i2cDelay();
+    }
+    digitalWrite(PIN_DATA, LOW);
+    i2cDelay();
+    digitalWrite(PIN_CLOCK, LOW);
+    i2cDelay();
+    started = <span class="keyword">true</span>;
+}
+
+<span class="keywordtype">void</span> i2cStop()
+{
+    pinMode(PIN_DATA, OUTPUT);
+    digitalWrite(PIN_DATA, LOW);
+    digitalWrite(PIN_CLOCK, HIGH);
+    i2cDelay();
+    digitalWrite(PIN_DATA, HIGH);
+    i2cDelay();
+    started = <span class="keyword">false</span>;
+}
+
+<span class="keyword">inline</span> <span class="keywordtype">void</span> i2cWriteBit(<span class="keywordtype">bool</span> bit)
+{
+    pinMode(PIN_DATA, OUTPUT);
+    <span class="keywordflow">if</span> (bit)
+        digitalWrite(PIN_DATA, HIGH);
+    <span class="keywordflow">else</span>
+        digitalWrite(PIN_DATA, LOW);
+    i2cDelay();
+    digitalWrite(PIN_CLOCK, HIGH);
+    i2cDelay();
+    digitalWrite(PIN_CLOCK, LOW);
+    i2cDelay();
+}
+
+<span class="keyword">inline</span> <span class="keywordtype">bool</span> i2cReadBit()
+{
+    pinMode(PIN_DATA, INPUT);
+    digitalWrite(PIN_DATA, HIGH);
+    digitalWrite(PIN_CLOCK, HIGH);
+    <span class="keywordtype">bool</span> bit = digitalRead(PIN_DATA);
+    i2cDelay();
+    digitalWrite(PIN_CLOCK, LOW);
+    i2cDelay();
+    <span class="keywordflow">return</span> bit;
+}
+
+<span class="preprocessor">#define I2C_ACK     false</span>
+<span class="preprocessor"></span><span class="preprocessor">#define I2C_NACK    true</span>
+<span class="preprocessor"></span>
+<span class="keywordtype">bool</span> i2cWrite(byte value)
+{
+    byte mask = 0x80;
+    <span class="keywordflow">while</span> (mask != 0) {
+        i2cWriteBit((value &amp; mask) != 0);
+        mask &gt;&gt;= 1;
+    }
+    <span class="keywordflow">return</span> i2cReadBit();
+}
+
+byte i2cRead(<span class="keywordtype">bool</span> nack)
+{
+    byte value = 0;
+    <span class="keywordflow">for</span> (byte bit = 0; bit &lt; 8; ++bit)
+        value = (value &lt;&lt; 1) | i2cReadBit();
+    i2cWriteBit(nack);
+    <span class="keywordflow">return</span> value;
+}
+
+<span class="preprocessor">#define I2C_READ    0x01</span>
+<span class="preprocessor"></span><span class="preprocessor">#define I2C_WRITE   0x00</span>
+<span class="preprocessor"></span>
+<span class="keywordtype">bool</span> writeAddress(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> byteAddr)
+{
+    byte ctrl;
+    <span class="keywordflow">switch</span> (eepromBlockSelectMode) {
+    <span class="keywordflow">case</span> BSEL_NONE:
+        <span class="keywordflow">if</span> (i2cWrite(eepromI2CAddress | I2C_WRITE) == I2C_NACK)
+            <span class="keywordflow">return</span> <span class="keyword">false</span>;
+        i2cWrite((byte)(byteAddr &gt;&gt; 8));
+        i2cWrite((byte)byteAddr);
+        <span class="keywordflow">break</span>;
+    <span class="keywordflow">case</span> BSEL_8BIT_ADDR:
+        ctrl = eepromI2CAddress | ((byte)(byteAddr &gt;&gt; 7) &amp; 0x0E) | I2C_WRITE;
+        <span class="keywordflow">if</span> (i2cWrite(ctrl) == I2C_NACK)
+            <span class="keywordflow">return</span> <span class="keyword">false</span>;
+        i2cWrite((byte)byteAddr);
+        <span class="keywordflow">break</span>;
+    <span class="keywordflow">case</span> BSEL_17BIT_ADDR:
+        ctrl = eepromI2CAddress | ((byte)(byteAddr &gt;&gt; 15) &amp; 0x02) | I2C_WRITE;
+        <span class="keywordflow">if</span> (i2cWrite(ctrl) == I2C_NACK)
+            <span class="keywordflow">return</span> <span class="keyword">false</span>;
+        i2cWrite((byte)(byteAddr &gt;&gt; 8));
+        i2cWrite((byte)byteAddr);
+        <span class="keywordflow">break</span>;
+    <span class="keywordflow">case</span> BSEL_17BIT_ADDR_ALT:
+        ctrl = eepromI2CAddress | ((byte)(byteAddr &gt;&gt; 13) &amp; 0x08) | I2C_WRITE;
+        <span class="keywordflow">if</span> (i2cWrite(ctrl) == I2C_NACK)
+            <span class="keywordflow">return</span> <span class="keyword">false</span>;
+        i2cWrite((byte)(byteAddr &gt;&gt; 8));
+        i2cWrite((byte)byteAddr);
+        <span class="keywordflow">break</span>;
+    }
+    <span class="keywordflow">return</span> <span class="keyword">true</span>;
+}
+
+<span class="comment">// Start a bulk read operation.</span>
+<span class="keywordtype">bool</span> startRead(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr)
+{
+    enterProgramMode();
+    i2cStart();
+    <span class="keywordflow">if</span> (!writeAddress(addr * 2))
+        <span class="keywordflow">return</span> <span class="keyword">false</span>;
+    i2cStart();
+    <span class="keywordflow">return</span> i2cWrite(eepromI2CAddress | I2C_READ) == I2C_ACK;
+}
+
+<span class="comment">// Read the next 16-bit word from the EEPROM during a bulk read operation.</span>
+<span class="comment">// If &quot;last&quot; is true then stop the bulk read operation after reading the word.</span>
+<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> readWord(<span class="keywordtype">bool</span> last)
+{
+    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> value = i2cRead(I2C_ACK);
+    value |= ((<span class="keywordtype">unsigned</span> int)(i2cRead(last))) &lt;&lt; 8;
+    <span class="keywordflow">if</span> (last)
+        i2cStop();
+    <span class="keywordflow">return</span> value;
+}
+
+<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> writeByteAddr;
+<span class="keywordtype">bool</span> writeAddrNeeded;
+
+<span class="comment">// Start a bulk write operation.</span>
+<span class="keywordtype">void</span> startWrite(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr)
+{
+    enterProgramMode();
+    writeByteAddr = addr * 2;
+    writeAddrNeeded = <span class="keyword">true</span>;
+}
+
+<span class="comment">// Write a 16-bit word during a bulk write operation.</span>
+<span class="keywordtype">bool</span> writeWord(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> word)
+{
+    <span class="keywordflow">if</span> (writeAddrNeeded) {
+        i2cStart();
+        <span class="keywordflow">if</span> (!writeAddress(writeByteAddr)) {
+            i2cStop();
+            <span class="keywordflow">return</span> <span class="keyword">false</span>;
         }
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (addr &gt;= configStart &amp;&amp; addr &lt;= configEnd) {
-        <span class="comment">// Configuration memory.</span>
-        addr -= configStart;
-        <span class="keywordflow">if</span> (state == STATE_IDLE) {
-            <span class="comment">// Enter programming mode and switch to config memory.</span>
-            enterProgramMode();
-            sendWriteCommand(CMD_LOAD_CONFIG, 0);
-            state = STATE_CONFIG;
-        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (state == STATE_PROGRAM) {
-            <span class="comment">// Switch from program memory to config memory.</span>
-            sendWriteCommand(CMD_LOAD_CONFIG, 0);
-            state = STATE_CONFIG;
-            pc = 0;
-        } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (addr &lt; pc) {
-            <span class="comment">// Need to go backwards in config memory, so reset the device.</span>
-            exitProgramMode();
-            enterProgramMode();
-            sendWriteCommand(CMD_LOAD_CONFIG, 0);
-            state = STATE_CONFIG;
+        writeAddrNeeded = <span class="keyword">false</span>;
+    }
+    i2cWrite((byte)word);
+    <span class="keywordflow">if</span> (eepromPageSize == 1) {
+        <span class="comment">// 24LC00 needs a flush after every byte that is written.</span>
+        i2cStop();
+        <span class="keywordflow">for</span> (;;) {
+            <span class="comment">// Poll until we get an acknowledgement from the EEPROM.</span>
+            i2cStart();
+            <span class="keywordflow">if</span> (i2cWrite(eepromI2CAddress | I2C_WRITE) == I2C_ACK)
+                <span class="keywordflow">break</span>;
         }
-    } <span class="keywordflow">else</span> {
-        <span class="comment">// Program memory.</span>
-        <span class="keywordflow">if</span> (state != STATE_PROGRAM || addr &lt; pc) {
-            <span class="comment">// Device is off, currently looking at configuration memory,</span>
-            <span class="comment">// or the address is further back.  Reset the device.</span>
-            exitProgramMode();
-            enterProgramMode();
+        i2cStop();
+        i2cStart();
+        <span class="keywordflow">if</span> (!writeAddress(writeByteAddr + 1)) {
+            i2cStop();
+            <span class="keywordflow">return</span> <span class="keyword">false</span>;
         }
     }
-    <span class="keywordflow">while</span> (pc &lt; addr) {
-        sendSimpleCommand(CMD_INCREMENT_ADDRESS);
-        ++pc;
+    i2cWrite((byte)(word &gt;&gt; 8));
+    writeByteAddr += 2;
+    <span class="keywordflow">if</span> ((writeByteAddr % eepromPageSize) == 0) {
+        <span class="comment">// Overflow into the next page, so need to flush and send a new address.</span>
+        i2cStop();
+        <span class="keywordflow">for</span> (;;) {
+            <span class="comment">// Poll until we get an acknowledgement from the EEPROM.</span>
+            i2cStart();
+            <span class="keywordflow">if</span> (i2cWrite(eepromI2CAddress | I2C_WRITE) == I2C_ACK)
+                <span class="keywordflow">break</span>;
+        }
+        i2cStop();
+        writeAddrNeeded = <span class="keyword">true</span>;
+    }
+    <span class="keywordflow">return</span> <span class="keyword">true</span>;
+}
+
+<span class="comment">// Stop a bulk write operation.</span>
+<span class="keywordtype">void</span> stopWrite()
+{
+    <span class="keywordflow">if</span> (!writeAddrNeeded) {
+        <span class="comment">// Flush the final page write operation.</span>
+        i2cStop();
+        <span class="keywordflow">for</span> (;;) {
+            <span class="comment">// Poll until we get an acknowledgement from the EEPROM.</span>
+            i2cStart();
+            <span class="keywordflow">if</span> (i2cWrite(eepromI2CAddress | I2C_WRITE) == I2C_ACK)
+                <span class="keywordflow">break</span>;
+        }
+        i2cStop();
     }
 }
 
-<span class="comment">// Sets the PC for &quot;erase mode&quot;, which is activated by loading the</span>
-<span class="comment">// data value 0x3FFF into location 0 of configuration memory.</span>
-<span class="keywordtype">void</span> setErasePC()
+<span class="comment">// Erases all bytes within the EEPROM by setting them to 0xFF.</span>
+<span class="keywordtype">bool</span> eraseAll()
 {
-    <span class="comment">// Forcibly reset the device so we know what state it is in.</span>
-    exitProgramMode();
     enterProgramMode();
 
-    <span class="comment">// Load 0x3FFF for the configuration.</span>
-    sendWriteCommand(CMD_LOAD_CONFIG, 0x3FFF);
-    state = STATE_CONFIG;
+    <span class="comment">// Fill the bytes a page at a time.</span>
+    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> startTime = millis();
+    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> currentTime;
+    <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr = 0;
+    <span class="keywordtype">bool</span> activity = <span class="keyword">true</span>;
+    <span class="keywordflow">while</span> (addr &lt; eepromSize) {
+        i2cStart();
+        <span class="keywordflow">if</span> (!writeAddress(addr))
+            <span class="keywordflow">return</span> <span class="keyword">false</span>;   <span class="comment">// No device on the bus.</span>
+        <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> count = 0; count &lt; eepromPageSize; ++count)
+            i2cWrite(0xFF);
+        i2cStop();
+        <span class="keywordflow">for</span> (;;) {
+            <span class="comment">// Poll until we get an acknowledgement from the EEPROM.</span>
+            i2cStart();
+            <span class="keywordflow">if</span> (i2cWrite(eepromI2CAddress | I2C_WRITE) == I2C_ACK)
+                <span class="keywordflow">break</span>;
+        }
+        i2cStop();
+        addr += eepromPageSize;
+        <span class="keywordflow">if</span> ((addr % 512) == 0) {
+            activity = !activity;
+            <span class="keywordflow">if</span> (activity)
+                digitalWrite(PIN_ACTIVITY, HIGH);
+            <span class="keywordflow">else</span>
+                digitalWrite(PIN_ACTIVITY, LOW);
+        }
+        currentTime = millis();
+        <span class="keywordflow">if</span> ((currentTime - startTime) &gt;= 2000) {
+            <span class="comment">// Erase has been running for too long, so ask the host to wait.</span>
+            Serial.println(<span class="stringliteral">&quot;PENDING&quot;</span>);
+            startTime = currentTime;
+        }
+    }
+    <span class="keywordflow">return</span> <span class="keyword">true</span>;
 }
 
-<span class="comment">// Read a word from memory (program, config, or data depending upon addr).</span>
-<span class="comment">// The start and stop bits will be stripped from the raw value from the PIC.</span>
-<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> readWord(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr)
+<span class="comment">// Probe the device to see if it is present on the bus.  We do this by</span>
+<span class="comment">// doing a &quot;Current Address Read&quot; and checking for the presence of ACK bits.</span>
+<span class="keywordtype">bool</span> probeDevice()
 {
-    setPC(addr);
-    <span class="keywordflow">if</span> (addr &gt;= dataStart &amp;&amp; addr &lt;= dataEnd)
-        <span class="keywordflow">return</span> (sendReadCommand(CMD_READ_DATA_MEMORY) &gt;&gt; 1) &amp; 0x00FF;
-    <span class="keywordflow">else</span>
-        <span class="keywordflow">return</span> (sendReadCommand(CMD_READ_PROGRAM_MEMORY) &gt;&gt; 1) &amp; 0x3FFF;
-}
-
-<span class="comment">// Read a word from config memory using relative, non-flat, addressing.</span>
-<span class="comment">// Used by the &quot;DEVICE&quot; command to fetch information about devices whose</span>
-<span class="comment">// flat address ranges are presently unknown.</span>
-<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> readConfigWord(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr)
-{
-    <span class="keywordflow">if</span> (state == STATE_IDLE) {
-        <span class="comment">// Enter programming mode and switch to config memory.</span>
-        enterProgramMode();
-        sendWriteCommand(CMD_LOAD_CONFIG, 0);
-        state = STATE_CONFIG;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (state == STATE_PROGRAM) {
-        <span class="comment">// Switch from program memory to config memory.</span>
-        sendWriteCommand(CMD_LOAD_CONFIG, 0);
-        state = STATE_CONFIG;
-        pc = 0;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (addr &lt; pc) {
-        <span class="comment">// Need to go backwards in config memory, so reset the device.</span>
-        exitProgramMode();
-        enterProgramMode();
-        sendWriteCommand(CMD_LOAD_CONFIG, 0);
-        state = STATE_CONFIG;
-    }
-    <span class="keywordflow">while</span> (pc &lt; addr) {
-        sendSimpleCommand(CMD_INCREMENT_ADDRESS);
-        ++pc;
-    }
-    <span class="keywordflow">return</span> (sendReadCommand(CMD_READ_PROGRAM_MEMORY) &gt;&gt; 1) &amp; 0x3FFF;
-}
-
-<span class="comment">// Begin a programming cycle, depending upon the type of flash being written.</span>
-<span class="keywordtype">void</span> beginProgramCycle(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr, <span class="keywordtype">bool</span> isData)
-{
-    <span class="keywordflow">switch</span> (isData ? dataFlashType : progFlashType) {
-    <span class="keywordflow">case</span> FLASH:
-    <span class="keywordflow">case</span> EEPROM:
-        sendSimpleCommand(CMD_BEGIN_PROGRAM);
-        delayMicroseconds(DELAY_TDPROG + DELAY_TERA);
-        <span class="keywordflow">break</span>;
-    <span class="keywordflow">case</span> FLASH4:
-        sendSimpleCommand(CMD_BEGIN_PROGRAM);
-        delayMicroseconds(DELAY_TPROG);
-        <span class="keywordflow">break</span>;
-    <span class="keywordflow">case</span> FLASH5:
-        sendSimpleCommand(CMD_BEGIN_PROGRAM_ONLY);
-        delayMicroseconds(DELAY_TPROG5);
-        sendSimpleCommand(CMD_END_PROGRAM_ONLY);
-        <span class="keywordflow">break</span>;
-    }
-}
-
-<span class="comment">// Write a word to memory (program, config, or data depending upon addr).</span>
-<span class="comment">// Returns true if the write succeeded, false if read-back failed to match.</span>
-<span class="keywordtype">bool</span> writeWord(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> word)
-{
-    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> readBack;
-    setPC(addr);
-    <span class="keywordflow">if</span> (addr &gt;= dataStart &amp;&amp; addr &lt;= dataEnd) {
-        word &amp;= 0x00FF;
-        sendWriteCommand(CMD_LOAD_DATA_MEMORY, word &lt;&lt; 1);
-        beginProgramCycle(addr, <span class="keyword">true</span>);
-        readBack = sendReadCommand(CMD_READ_DATA_MEMORY);
-        readBack = (readBack &gt;&gt; 1) &amp; 0x00FF;
-    } <span class="keywordflow">else</span> <span class="keywordflow">if</span> (!configSave || addr != (configStart + DEV_CONFIG_WORD)) {
-        word &amp;= 0x3FFF;
-        sendWriteCommand(CMD_LOAD_PROGRAM_MEMORY, word &lt;&lt; 1);
-        beginProgramCycle(addr, <span class="keyword">false</span>);
-        readBack = sendReadCommand(CMD_READ_PROGRAM_MEMORY);
-        readBack = (readBack &gt;&gt; 1) &amp; 0x3FFF;
-    } <span class="keywordflow">else</span> {
-        <span class="comment">// The configuration word has calibration bits within it that</span>
-        <span class="comment">// must be preserved when we write to it.  Read the current value</span>
-        <span class="comment">// and preserve the necessary bits.</span>
-        readBack = (sendReadCommand(CMD_READ_PROGRAM_MEMORY) &gt;&gt; 1) &amp; 0x3FFF;
-        word = (readBack &amp; configSave) | (word &amp; 0x3FFF &amp; ~configSave);
-        sendWriteCommand(CMD_LOAD_PROGRAM_MEMORY, word &lt;&lt; 1);
-        beginProgramCycle(addr, <span class="keyword">false</span>);
-        readBack = sendReadCommand(CMD_READ_PROGRAM_MEMORY);
-        readBack = (readBack &gt;&gt; 1) &amp; 0x3FFF;
-    }
-    <span class="keywordflow">return</span> readBack == word;
+    enterProgramMode();
+    i2cStart();
+    <span class="keywordflow">if</span> (i2cWrite(eepromI2CAddress | I2C_READ) == I2C_NACK)
+        <span class="keywordflow">return</span> <span class="keyword">false</span>;
+    i2cRead(I2C_NACK);
+    i2cStop();
+    <span class="keywordflow">return</span> <span class="keyword">true</span>;
 }
 </pre></div> </div></div>
 <!-- window showing the filter options -->
@@ -1361,7 +1236,7 @@ byte dataFlashType          = EEPROM;
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Sun May 6 2012 15:04:53 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Sun May 6 2012 15:04:52 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>

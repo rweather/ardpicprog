@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Ardpicprog: Supported PIC devices</title>
+<title>Ardpicprog: Supported PIC and EEPROM devices</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
@@ -50,10 +50,10 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="headertitle">
-<div class="title">Supported PIC devices </div>  </div>
+<div class="title">Supported PIC and EEPROM devices </div>  </div>
 </div>
 <div class="contents">
-<div class="textblock"><p>The following list describes the devices that are currently supported by the <a class="el" href="programpic_sketch.html">ProgramPIC sketch</a>. The sketch must be used with a circuit that is appropriate for the PIC device in question. The <a class="el" href="pic14_zif_circuit.html">14-bit PIC programmer</a> circuit supports some of these devices via the ZIF socket and others via the ICSP cable.</p>
+<div class="textblock"><p>The following list describes the devices that are currently supported by the <a class="el" href="programpic_sketch.html">ProgramPIC</a> or <a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> sketch. The sketch must be used with a circuit that is appropriate for the device in question. The <a class="el" href="pic14_zif_circuit.html">14-bit PIC programmer</a> circuit supports some of these devices via the ZIF socket and others via the ICSP cable.</p>
 <p>The author has personally tested only some of these devices. The others on this list are based on information published by <a href="http://www.microchip.com">Microchip Technology Inc</a> and contained within the source code for <a href="http://hyvatti.iki.fi/~jaakko/pic/picprog.html">picprog</a>. Patches are welcome to improve the device support.</p>
 <p>The following terms are used in the device list:</p>
 <dl class="user"><dt><b>Autodetected</b></dt><dd>The device can be automatically detected from its device identifier.</dd></dl>
@@ -63,33 +63,65 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <dl class="user"><dt><b>ICSP</b></dt><dd>The device cannot be placed directly into the ZIF socket on the 14-bit PIC programmer circuit. Instead, an ICSP adapter cable will be necessary.</dd></dl>
 <table class="doxtable">
 <tr>
-<td><b>Device Type</b> </td><td><b>Detection Method</b> </td><td><b>Programming Connector</b> </td><td><b>Notes</b>  </td></tr>
+<td><b>Device Type</b> </td><td><b>Detection Method</b> </td><td><b>Programming Connector</b> </td><td><b>Sketch</b> </td><td><b>Notes</b>  </td></tr>
 <tr>
-<td>pic12f629 </td><td>Autodetected </td><td>ZIF, 8-pin </td><td></td></tr>
+<td>pic12f629 </td><td>Autodetected </td><td>ZIF, 8-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
 <tr>
-<td>pic12f630 </td><td>Autodetected </td><td>ZIF, 8-pin </td><td></td></tr>
+<td>pic12f630 </td><td>Autodetected </td><td>ZIF, 8-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
 <tr>
-<td>pic12f675 </td><td>Autodetected </td><td>ZIF, 8-pin </td><td></td></tr>
+<td>pic12f675 </td><td>Autodetected </td><td>ZIF, 8-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
 <tr>
-<td>pic12f676 </td><td>Autodetected </td><td>ZIF, 8-pin </td><td></td></tr>
+<td>pic12f676 </td><td>Autodetected </td><td>ZIF, 8-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
 <tr>
-<td>pic16f84 </td><td>Manual </td><td>ZIF, 18-pin </td><td></td></tr>
+<td>pic16f84 </td><td>Manual </td><td>ZIF, 18-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
 <tr>
-<td>pic16f84a </td><td>Autodetected </td><td>ZIF, 18-pin </td><td>Personally tested by author  </td></tr>
+<td>pic16f84a </td><td>Autodetected </td><td>ZIF, 18-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td>Personally tested by author  </td></tr>
 <tr>
-<td>pic16f87 </td><td>Autodetected </td><td>ICSP </td><td>PGM is on pin 9 instead of pin 10  </td></tr>
+<td>pic16f87 </td><td>Autodetected </td><td>ICSP </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td>PGM is on pin 9 instead of pin 10  </td></tr>
 <tr>
-<td>pic16f88 </td><td>Autodetected </td><td>ICSP </td><td>PGM is on pin 9 instead of pin 10  </td></tr>
+<td>pic16f88 </td><td>Autodetected </td><td>ICSP </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td>PGM is on pin 9 instead of pin 10  </td></tr>
 <tr>
-<td>pic16f627 </td><td>Autodetected </td><td>ZIF, 18-pin </td><td></td></tr>
+<td>pic16f627 </td><td>Autodetected </td><td>ZIF, 18-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
 <tr>
-<td>pic16f627a </td><td>Autodetected </td><td>ZIF, 18-pin </td><td></td></tr>
+<td>pic16f627a </td><td>Autodetected </td><td>ZIF, 18-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
 <tr>
-<td>pic16f628 </td><td>Autodetected </td><td>ZIF, 18-pin </td><td></td></tr>
+<td>pic16f628 </td><td>Autodetected </td><td>ZIF, 18-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
 <tr>
-<td>pic16f628a </td><td>Autodetected </td><td>ZIF, 18-pin </td><td>Personally tested by author  </td></tr>
+<td>pic16f628a </td><td>Autodetected </td><td>ZIF, 18-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td>Personally tested by author  </td></tr>
 <tr>
-<td>pic16f648a </td><td>Autodetected </td><td>ZIF, 18-pin </td><td></td></tr>
+<td>pic16f648a </td><td>Autodetected </td><td>ZIF, 18-pin </td><td><a class="el" href="programpic_sketch.html">ProgramPIC</a> </td><td></td></tr>
+<tr>
+<td>24lc00 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc01 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc014 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc02 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc024 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc025 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc04 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc08 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc16 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc32 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc64 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc128 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc256 </td><td>Autodetected </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td>Personally tested by author  </td></tr>
+<tr>
+<td>24lc512 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
+<tr>
+<td>24lc1025 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td>Pin 3 (A2) on the 24LC1025 must be tied to VDD, not VSS  </td></tr>
+<tr>
+<td>24lc1026 </td><td>Manual </td><td>ICSP </td><td><a class="el" href="programeeprom_sketch.html">ProgramEEPROM</a> </td><td></td></tr>
 </table>
 </div></div>
 <!-- window showing the filter options -->
@@ -106,7 +138,7 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Wed May 2 2012 14:33:01 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Sun May 6 2012 15:04:53 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>
