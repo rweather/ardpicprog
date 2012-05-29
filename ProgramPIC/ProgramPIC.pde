@@ -690,6 +690,18 @@ void cmdWriteBinary(const char *args)
     unsigned long addr;
     unsigned long limit;
     int size;
+
+    // Was the "FORCE" option given?
+    int len = 0;
+    while (args[len] != '\0' && args[len] != ' ' && args[len] != '\t')
+        ++len;
+    bool force = matchString(s_force, args, len);
+    if (force) {
+        args += len;
+        while (*args == ' ' || *args == '\t')
+            ++args;
+    }
+
     size = parseHex(args, &addr);
     if (!size) {
         Serial.println("ERROR");
@@ -744,10 +756,18 @@ void cmdWriteBinary(const char *args)
             unsigned int value =
                 (((unsigned int)buffer[posn]) & 0xFF) |
                 ((((unsigned int)buffer[posn + 1]) & 0xFF) << 8);
-            if (!writeWord(addr, (unsigned int)value)) {
-                // The actual write to the device failed.
-                Serial.println("ERROR");
-                return;
+            if (!force) {
+                if (!writeWord(addr, (unsigned int)value)) {
+                    // The actual write to the device failed.
+                    Serial.println("ERROR");
+                    return;
+                }
+            } else {
+                if (!writeWordForced(addr, (unsigned int)value)) {
+                    // The actual write to the device failed.
+                    Serial.println("ERROR");
+                    return;
+                }
             }
             ++addr;
             ++count;

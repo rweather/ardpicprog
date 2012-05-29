@@ -168,7 +168,7 @@ bool SerialPort::readData(unsigned long start, unsigned long end, unsigned short
 }
 
 // Writes a large block of data using a "WRITEBIN" or "WRITE" command.
-bool SerialPort::writeData(unsigned long start, unsigned long end, const unsigned short *data)
+bool SerialPort::writeData(unsigned long start, unsigned long end, const unsigned short *data, bool force)
 {
     char buffer[BINARY_TRANSFER_MAX + 1];
     unsigned long len = (end - start + 1) * 2;
@@ -176,11 +176,12 @@ bool SerialPort::writeData(unsigned long start, unsigned long end, const unsigne
     unsigned short word;
     if (len == 10) {
         // Cannot use "WRITEBIN" for exactly 10 bytes, so use "WRITE" instead.
-        sprintf(buffer, "WRITE %04lX %04X %04X %04X %04X %04X",
+        sprintf(buffer, "WRITE %s%04lX %04X %04X %04X %04X %04X",
+                force ? "FORCE " : "",
                 start, data[0], data[1], data[2], data[3], data[4]);
         return command(buffer);
     }
-    sprintf(buffer, "WRITEBIN %04lX", start);
+    sprintf(buffer, "WRITEBIN %s%04lX", force ? "FORCE " : "", start);
     if (!command(buffer))
         return false;
     while (len >= BINARY_TRANSFER_MAX) {

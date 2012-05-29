@@ -47,7 +47,7 @@ public:
     std::string devices();
 
     bool readData(unsigned long start, unsigned long end, unsigned short *data);
-    bool writeData(unsigned long start, unsigned long end, const unsigned short *data);
+    bool writeData(unsigned long start, unsigned long end, const unsigned short *data, bool force);
 
     int timeout() const { return timeoutSecs; }
     void setTimeout(int timeout) { timeoutSecs = timeout; }

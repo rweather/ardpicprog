@@ -281,11 +281,11 @@ bool HexFile::write(SerialPort *port, bool forceCalibration)
         fflush(stdout);
         if (forceCalibration || _reservedStart > _reservedEnd) {
             // Calibration forced or no reserved words to worry about.
-            if (!writeBlock(port, _programStart, _programEnd))
+            if (!writeBlock(port, _programStart, _programEnd, forceCalibration))
                 return false;
         } else {
             // Assumes: reserved words are always at the end of program memory.
-            if (!writeBlock(port, _programStart, _reservedStart - 1))
+            if (!writeBlock(port, _programStart, _reservedStart - 1, forceCalibration))
                 return false;
         }
         reportCount();
@@ -298,7 +298,7 @@ bool HexFile::write(SerialPort *port, bool forceCalibration)
     if (_dataStart <= _dataEnd) {
         printf("burning data memory,");
         fflush(stdout);
-        if (!writeBlock(port, _dataStart, _dataEnd))
+        if (!writeBlock(port, _dataStart, _dataEnd, forceCalibration))
             return false;
         reportCount();
     } else {
@@ -309,7 +309,7 @@ bool HexFile::write(SerialPort *port, bool forceCalibration)
     if (_configStart <= _configEnd) {
         printf("burning id words and fuses,");
         fflush(stdout);
-        if (!writeBlock(port, _configStart, _configEnd))
+        if (!writeBlock(port, _configStart, _configEnd, forceCalibration))
             return false;
         reportCount();
     } else {
@@ -320,7 +320,7 @@ bool HexFile::write(SerialPort *port, bool forceCalibration)
     return true;
 }
 
-bool HexFile::writeBlock(SerialPort *port, Address start, Address end)
+bool HexFile::writeBlock(SerialPort *port, Address start, Address end, bool forceCalibration)
 {
     std::vector<HexFileBlock>::const_iterator it;
     for (it = blocks.begin(); it != blocks.end(); ++it) {
@@ -341,7 +341,7 @@ bool HexFile::writeBlock(SerialPort *port, Address start, Address end)
                 overlapEnd = end;
             else
                 overlapEnd = blockEnd;
-            if (!port->writeData(overlapStart, overlapEnd, data))
+            if (!port->writeData(overlapStart, overlapEnd, data, forceCalibration))
                 return false;
             count += overlapEnd - overlapStart + 1;
         }

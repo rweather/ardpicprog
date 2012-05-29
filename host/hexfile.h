@@ -118,7 +118,7 @@ private:
     Address count;
 
     bool readBlock(SerialPort *port, Address start, Address end);
-    bool writeBlock(SerialPort *port, Address start, Address end);
+    bool writeBlock(SerialPort *port, Address start, Address end, bool forceCalibration);
 
     void saveRange(FILE *file, Address start, Address end, bool skipOnes) const;
     void saveRange(FILE *file, Address start, Address end) const;
