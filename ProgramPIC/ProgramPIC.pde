@@ -593,6 +593,8 @@ void cmdReadBinary(const char *args)
     Serial.write((uint8_t)0x00);
 }
 
+const char s_force[] PROGMEM = "FORCE";
+
 // WRITE command.
 void cmdWrite(const char *args)
 {
@@ -600,6 +602,18 @@ void cmdWrite(const char *args)
     unsigned long limit;
     unsigned long value;
     int size;
+
+    // Was the "FORCE" option given?
+    int len = 0;
+    while (args[len] != '\0' && args[len] != ' ' && args[len] != '\t')
+        ++len;
+    bool force = matchString(s_force, args, len);
+    if (force) {
+        args += len;
+        while (*args == ' ' || *args == '\t')
+            ++args;
+    }
+
     size = parseHex(args, &addr);
     if (!size) {
         Serial.println("ERROR");
@@ -638,10 +652,18 @@ void cmdWrite(const char *args)
             Serial.println("ERROR");
             return;
         }
-        if (!writeWord(addr, (unsigned int)value)) {
-            // The actual write to the device failed.
-            Serial.println("ERROR");
-            return;
+        if (!force) {
+            if (!writeWord(addr, (unsigned int)value)) {
+                // The actual write to the device failed.
+                Serial.println("ERROR");
+                return;
+            }
+        } else {
+            if (!writeWordForced(addr, (unsigned int)value)) {
+                // The actual write to the device failed.
+                Serial.println("ERROR");
+                return;
+            }
         }
         ++addr;
         ++count;
@@ -777,11 +799,8 @@ void cmdErase(const char *args)
             return;
         }
     }
-    if (configSave != 0) {
+    if (configSave != 0 && preserve) {
         // Some of the bits in the configuration word must also be saved.
-        // We always preserve these, even if NOPRESERVE is given because of
-        // the check in writeWord() that prevents new bits from ever
-        // being written to the preserved bits in the configuration word.
         configWord &= ~configSave;
         configWord |= readWord(configStart + DEV_CONFIG_WORD) & configSave;
     }
@@ -791,7 +810,7 @@ void cmdErase(const char *args)
     case FLASH4:
         setErasePC();
         sendSimpleCommand(CMD_BULK_ERASE_PROGRAM);
-        delayMicroseconds(DELAY_TFULLERA);
+        delayMicroseconds(DELAY_TERA);
         sendSimpleCommand(CMD_BULK_ERASE_DATA);
         break;
     case FLASH5:
@@ -850,7 +869,7 @@ void cmdErase(const char *args)
     // write fails, then leave the words as-is - don't report the failure.
     for (unsigned long configAddr = configStart + DEV_CONFIG_WORD;
             configAddr <= configEnd; ++configAddr)
-        writeWord(configAddr, configWord);
+        writeWordForced(configAddr, configWord);
 
     // Done.
     Serial.println("OK");
@@ -1282,6 +1301,27 @@ bool writeWord(unsigned long addr, unsigned int word)
         // and preserve the necessary bits.
         readBack = (sendReadCommand(CMD_READ_PROGRAM_MEMORY) >> 1) & 0x3FFF;
         word = (readBack & configSave) | (word & 0x3FFF & ~configSave);
+        sendWriteCommand(CMD_LOAD_PROGRAM_MEMORY, word << 1);
+        beginProgramCycle(addr, false);
+        readBack = sendReadCommand(CMD_READ_PROGRAM_MEMORY);
+        readBack = (readBack >> 1) & 0x3FFF;
+    }
+    return readBack == word;
+}
+
+// Force a word to be written even if it normally would protect config bits.
+bool writeWordForced(unsigned long addr, unsigned int word)
+{
+    unsigned int readBack;
+    setPC(addr);
+    if (addr >= dataStart && addr <= dataEnd) {
+        word &= 0x00FF;
+        sendWriteCommand(CMD_LOAD_DATA_MEMORY, word << 1);
+        beginProgramCycle(addr, true);
+        readBack = sendReadCommand(CMD_READ_DATA_MEMORY);
+        readBack = (readBack >> 1) & 0x00FF;
+    } else {
+        word &= 0x3FFF;
         sendWriteCommand(CMD_LOAD_PROGRAM_MEMORY, word << 1);
         beginProgramCycle(addr, false);
         readBack = sendReadCommand(CMD_READ_PROGRAM_MEMORY);

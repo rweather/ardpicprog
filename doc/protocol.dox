@@ -368,6 +368,14 @@ WRITE 2100 11 22 33 44
 Because of ProgramPIC's 64 character limit on commands, it is recommended
 that no more than 8 words be sent in a single request.
 
+Some devices have preserved bits in the configuration word (e.g. PIC12F675)
+which will be protected by the \c WRITE command.  To disable this protection
+and force the value to be written regardless, use the \c FORCE option:
+
+\code
+WRITE FORCE 2007 21FF
+\endcode
+
 The command will respond with "OK" if the words were written, or "ERROR"
 if one of the following occurs:
 
