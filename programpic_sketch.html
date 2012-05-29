@@ -650,6 +650,8 @@ byte dataFlashType          = EEPROM;
     Serial.write((uint8_t)0x00);
 }
 
+<span class="keyword">const</span> <span class="keywordtype">char</span> s_force[] PROGMEM = <span class="stringliteral">&quot;FORCE&quot;</span>;
+
 <span class="comment">// WRITE command.</span>
 <span class="keywordtype">void</span> cmdWrite(<span class="keyword">const</span> <span class="keywordtype">char</span> *args)
 {
@@ -657,6 +659,18 @@ byte dataFlashType          = EEPROM;
     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> limit;
     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> value;
     <span class="keywordtype">int</span> size;
+
+    <span class="comment">// Was the &quot;FORCE&quot; option given?</span>
+    <span class="keywordtype">int</span> len = 0;
+    <span class="keywordflow">while</span> (args[len] != <span class="charliteral">&#39;\0&#39;</span> &amp;&amp; args[len] != <span class="charliteral">&#39; &#39;</span> &amp;&amp; args[len] != <span class="charliteral">&#39;\t&#39;</span>)
+        ++len;
+    <span class="keywordtype">bool</span> force = matchString(s_force, args, len);
+    <span class="keywordflow">if</span> (force) {
+        args += len;
+        <span class="keywordflow">while</span> (*args == <span class="charliteral">&#39; &#39;</span> || *args == <span class="charliteral">&#39;\t&#39;</span>)
+            ++args;
+    }
+
     size = parseHex(args, &amp;addr);
     <span class="keywordflow">if</span> (!size) {
         Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
@@ -695,10 +709,18 @@ byte dataFlashType          = EEPROM;
             Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
             <span class="keywordflow">return</span>;
         }
-        <span class="keywordflow">if</span> (!writeWord(addr, (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
-            <span class="comment">// The actual write to the device failed.</span>
-            Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
-            <span class="keywordflow">return</span>;
+        <span class="keywordflow">if</span> (!force) {
+            <span class="keywordflow">if</span> (!writeWord(addr, (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
+                <span class="comment">// The actual write to the device failed.</span>
+                Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
+                <span class="keywordflow">return</span>;
+            }
+        } <span class="keywordflow">else</span> {
+            <span class="keywordflow">if</span> (!writeWordForced(addr, (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
+                <span class="comment">// The actual write to the device failed.</span>
+                Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
+                <span class="keywordflow">return</span>;
+            }
         }
         ++addr;
         ++count;
@@ -834,11 +856,8 @@ byte dataFlashType          = EEPROM;
             <span class="keywordflow">return</span>;
         }
     }
-    <span class="keywordflow">if</span> (configSave != 0) {
+    <span class="keywordflow">if</span> (configSave != 0 &amp;&amp; preserve) {
         <span class="comment">// Some of the bits in the configuration word must also be saved.</span>
-        <span class="comment">// We always preserve these, even if NOPRESERVE is given because of</span>
-        <span class="comment">// the check in writeWord() that prevents new bits from ever</span>
-        <span class="comment">// being written to the preserved bits in the configuration word.</span>
         configWord &amp;= ~configSave;
         configWord |= readWord(configStart + DEV_CONFIG_WORD) &amp; configSave;
     }
@@ -848,7 +867,7 @@ byte dataFlashType          = EEPROM;
     <span class="keywordflow">case</span> FLASH4:
         setErasePC();
         sendSimpleCommand(CMD_BULK_ERASE_PROGRAM);
-        delayMicroseconds(DELAY_TFULLERA);
+        delayMicroseconds(DELAY_TERA);
         sendSimpleCommand(CMD_BULK_ERASE_DATA);
         <span class="keywordflow">break</span>;
     <span class="keywordflow">case</span> FLASH5:
@@ -907,7 +926,7 @@ byte dataFlashType          = EEPROM;
     <span class="comment">// write fails, then leave the words as-is - don&#39;t report the failure.</span>
     <span class="keywordflow">for</span> (<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> configAddr = configStart + DEV_CONFIG_WORD;
             configAddr &lt;= configEnd; ++configAddr)
-        writeWord(configAddr, configWord);
+        writeWordForced(configAddr, configWord);
 
     <span class="comment">// Done.</span>
     Serial.println(<span class="stringliteral">&quot;OK&quot;</span>);
@@ -1346,6 +1365,27 @@ byte dataFlashType          = EEPROM;
     }
     <span class="keywordflow">return</span> readBack == word;
 }
+
+<span class="comment">// Force a word to be written even if it normally would protect config bits.</span>
+<span class="keywordtype">bool</span> writeWordForced(<span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> word)
+{
+    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> readBack;
+    setPC(addr);
+    <span class="keywordflow">if</span> (addr &gt;= dataStart &amp;&amp; addr &lt;= dataEnd) {
+        word &amp;= 0x00FF;
+        sendWriteCommand(CMD_LOAD_DATA_MEMORY, word &lt;&lt; 1);
+        beginProgramCycle(addr, <span class="keyword">true</span>);
+        readBack = sendReadCommand(CMD_READ_DATA_MEMORY);
+        readBack = (readBack &gt;&gt; 1) &amp; 0x00FF;
+    } <span class="keywordflow">else</span> {
+        word &amp;= 0x3FFF;
+        sendWriteCommand(CMD_LOAD_PROGRAM_MEMORY, word &lt;&lt; 1);
+        beginProgramCycle(addr, <span class="keyword">false</span>);
+        readBack = sendReadCommand(CMD_READ_PROGRAM_MEMORY);
+        readBack = (readBack &gt;&gt; 1) &amp; 0x3FFF;
+    }
+    <span class="keywordflow">return</span> readBack == word;
+}
 </pre></div> </div></div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
@@ -1361,7 +1401,7 @@ byte dataFlashType          = EEPROM;
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Sun May 6 2012 15:04:53 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Tue May 29 2012 16:36:50 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>
