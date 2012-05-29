@@ -401,7 +401,8 @@ that it packs the data into an efficient binary form for faster
 transmission from the host to ProgramPIC.  This command is recommended
 for host applications that write bulk data to a PIC.
 
-The command starts by sending the starting address to ProgramPIC:
+The command starts by sending the starting address to ProgramPIC (the
+\c FORCE option can also be used):
 
 \code
 WRITEBIN 0100
