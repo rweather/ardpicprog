@@ -747,6 +747,18 @@ byte dataFlashType          = EEPROM;
     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> addr;
     <span class="keywordtype">unsigned</span> <span class="keywordtype">long</span> limit;
     <span class="keywordtype">int</span> size;
+
+    <span class="comment">// Was the &quot;FORCE&quot; option given?</span>
+    <span class="keywordtype">int</span> len = 0;
+    <span class="keywordflow">while</span> (args[len] != <span class="charliteral">&#39;\0&#39;</span> &amp;&amp; args[len] != <span class="charliteral">&#39; &#39;</span> &amp;&amp; args[len] != <span class="charliteral">&#39;\t&#39;</span>)
+        ++len;
+    <span class="keywordtype">bool</span> force = matchString(s_force, args, len);
+    <span class="keywordflow">if</span> (force) {
+        args += len;
+        <span class="keywordflow">while</span> (*args == <span class="charliteral">&#39; &#39;</span> || *args == <span class="charliteral">&#39;\t&#39;</span>)
+            ++args;
+    }
+
     size = parseHex(args, &amp;addr);
     <span class="keywordflow">if</span> (!size) {
         Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
@@ -801,10 +813,18 @@ byte dataFlashType          = EEPROM;
             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> value =
                 (((<span class="keywordtype">unsigned</span> int)buffer[posn]) &amp; 0xFF) |
                 ((((<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)buffer[posn + 1]) &amp; 0xFF) &lt;&lt; 8);
-            <span class="keywordflow">if</span> (!writeWord(addr, (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
-                <span class="comment">// The actual write to the device failed.</span>
-                Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
-                <span class="keywordflow">return</span>;
+            <span class="keywordflow">if</span> (!force) {
+                <span class="keywordflow">if</span> (!writeWord(addr, (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
+                    <span class="comment">// The actual write to the device failed.</span>
+                    Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
+                    <span class="keywordflow">return</span>;
+                }
+            } <span class="keywordflow">else</span> {
+                <span class="keywordflow">if</span> (!writeWordForced(addr, (<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span>)value)) {
+                    <span class="comment">// The actual write to the device failed.</span>
+                    Serial.println(<span class="stringliteral">&quot;ERROR&quot;</span>);
+                    <span class="keywordflow">return</span>;
+                }
             }
             ++addr;
             ++count;
@@ -1401,7 +1421,7 @@ byte dataFlashType          = EEPROM;
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Tue May 29 2012 16:36:50 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Tue May 29 2012 16:58:27 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>

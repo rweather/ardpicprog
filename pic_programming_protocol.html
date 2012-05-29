@@ -206,7 +206,7 @@ WRITE 2100 11 22 33 44
 <h2><a class="anchor" id="sect_cmd_writebin"></a>
 WRITEBIN</h2>
 <p>The <code>WRITEBIN</code> command is identical to <a class="el" href="pic_programming_protocol.html#sect_cmd_read">WRITE</a> except that it packs the data into an efficient binary form for faster transmission from the host to ProgramPIC. This command is recommended for host applications that write bulk data to a PIC.</p>
-<p>The command starts by sending the starting address to ProgramPIC:</p>
+<p>The command starts by sending the starting address to ProgramPIC (the <code>FORCE</code> option can also be used):</p>
 <div class="fragment"><pre class="fragment">WRITEBIN 0100
 </pre></div><p>At this point, the command responds with "OK" or "ERROR". An error occurs if the starting address is out of range or the command is badly formatted.</p>
 <p>If the command responds with "OK", then the host is clear to send a <em>single</em> binary packet to ProgramPIC using the same packet format as <a class="el" href="pic_programming_protocol.html#sect_cmd_readbin">READBIN</a>.</p>
@@ -263,7 +263,7 @@ Recommended sequence of commands</h2>
 </iframe>
 </div>
 
-<hr class="footer"/><address class="footer"><small>Generated on Tue May 29 2012 16:36:50 for Ardpicprog by&#160;
+<hr class="footer"/><address class="footer"><small>Generated on Tue May 29 2012 16:58:27 for Ardpicprog by&#160;
 <a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/></a> 1.7.4 </small></address>
 </body>
