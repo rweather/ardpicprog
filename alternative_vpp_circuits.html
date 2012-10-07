@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/xhtml;charset=UTF-8"/>
-<title>Ardpicprog: Related Pages</title>
+<title>Ardpicprog: Alternative 13 volt power supplies</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
@@ -50,28 +50,18 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 </div>
 <div class="header">
   <div class="headertitle">
-<div class="title">Related Pages</div>  </div>
+<div class="title">Alternative 13 volt power supplies </div>  </div>
 </div>
 <div class="contents">
-<div class="textblock">Here is a list of all related documentation pages:</div><ul>
-<li><a class="el" href="alternative_vpp_circuits.html">Alternative 13 volt power supplies</a>
-</li>
-<li><a class="el" href="host_program.html">Host program for controlling the PIC programmer</a>
-</li>
-<li><a class="el" href="installation.html">Installation instructions for Ardpicprog</a>
-</li>
-<li><a class="el" href="pic14_zif_circuit.html">Circuit details for 14-bit PIC programmer</a>
-</li>
-<li><a class="el" href="programeeprom_sketch.html">ProgramEEPROM sketch</a>
-</li>
-<li><a class="el" href="programpic_sketch.html">ProgramPIC sketch</a>
-</li>
-<li><a class="el" href="pic_programming_protocol.html">Serial protocol for programming PIC's and EEPROM's with Arduino</a>
-</li>
-<li><a class="el" href="supported_devices.html">Supported PIC and EEPROM devices</a>
-</li>
-</ul>
+<div class="textblock"><p>This page describes alternative designs for the 13 volt VPP power supply that have been contributed by members of the community.</p>
+<h2><a class="anchor" id="max629_power_supply"></a>
+MAX629</h2>
+<p><a href="mailto:peppe.musciacchio@alice.it">Giuseppe Musciacchio</a> contributed the following circuit based on a MAX629 DC-DC Converter (<a href="http://datasheets.maximintegrated.com/en/ds/MAX629.pdf">datasheet</a>) that can be powered directly from the Arduino's 5V supply rail:</p>
+<div class="image">
+<img src="power_supply_max629.png" alt="power_supply_max629.png"/>
 </div>
+<p>This MAX629 can output up to 28V, so use a multimeter on the output and adjust the 220K trimpot for 13V before connecting it to the rest of the PIC programmer circuit. According to the datasheet, a MBR0530L diode can be used in place of the 1N5819 diode. </p>
+</div></div>
 <!-- window showing the filter options -->
 <div id="MSearchSelectWindow"
      onmouseover="return searchBox.OnSearchSelectShow()"
