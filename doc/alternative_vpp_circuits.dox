@@ -1,0 +1,32 @@
+/*
+ * Copyright (C) 2012 Southern Storm Software, Pty Ltd.
+ *
+ * This work is licensed under the Creative Commons Attribution-ShareAlike
+ * 2.5 Generic License. To view a copy of this license, visit
+ * http://creativecommons.org/licenses/by-sa/2.5/ or send a letter
+ * to Creative Commons, 444 Castro Street, Suite 900, Mountain View,
+ * California, 94041, USA.
+ */
+
+/**
+\file alternative_vpp_circuits.dox
+\page alternative_vpp_circuits Alternative 13 volt power supplies
+
+This page describes alternative designs for the 13 volt VPP power supply that
+have been contributed by members of the community.
+
+\section max629_power_supply MAX629
+
+<a href="mailto:peppe.musciacchio@alice.it">Giuseppe Musciacchio</a>
+contributed the following circuit based on a MAX629 DC-DC Converter
+(<a href="http://datasheets.maximintegrated.com/en/ds/MAX629.pdf">datasheet</a>)
+that can be powered directly from the Arduino's 5V supply rail:
+
+\image html power_supply_max629.png
+
+This MAX629 can output up to 28V, so use a multimeter on the output and
+adjust the 220K trimpot for 13V before connecting it to the rest of the PIC
+programmer circuit.  According to the datasheet, a MBR0530L diode can be
+used in place of the 1N5819 diode.
+
+*/
