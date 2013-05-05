@@ -15,6 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define __PROG_TYPES_COMPAT__
 #include <avr/pgmspace.h>       // For PROGMEM
 
 // Pin mappings for the PIC programming shield.
