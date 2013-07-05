@@ -151,6 +151,41 @@ will be necessary.
   <td> </td>
 </tr>
 <tr>
+  <td>pic16f882</td>
+  <td>Autodetected</td>
+  <td>ICSP</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f883</td>
+  <td>Autodetected</td>
+  <td>ICSP</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f884</td>
+  <td>Autodetected</td>
+  <td>ICSP</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f886</td>
+  <td>Autodetected</td>
+  <td>ICSP</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
+  <td>Tested by Valter Fukuoka</td>
+</tr>
+<tr>
+  <td>pic16f887</td>
+  <td>Autodetected</td>
+  <td>ICSP</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
+  <td>Tested by Valter Fukuoka</td>
+</tr>
+<tr>
   <td>24lc00</td>
   <td>Manual</td>
   <td>ICSP</td>

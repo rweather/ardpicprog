@@ -98,6 +98,11 @@ const char s_pic16f627a[] PROGMEM = "pic16f627a";
 const char s_pic16f628[]  PROGMEM = "pic16f628";
 const char s_pic16f628a[] PROGMEM = "pic16f628a";
 const char s_pic16f648a[] PROGMEM = "pic16f648a";
+const char s_pic16f882[]  PROGMEM = "pic16f882";
+const char s_pic16f883[]  PROGMEM = "pic16f883";
+const char s_pic16f884[]  PROGMEM = "pic16f884";
+const char s_pic16f886[]  PROGMEM = "pic16f886";
+const char s_pic16f887[]  PROGMEM = "pic16f887";
 
 // List of devices that are currently supported and their properties.
 // Note: most of these are based on published information and have not
@@ -139,6 +144,13 @@ struct deviceInfo const devices[] PROGMEM = {
     {s_pic16f628,  0x07C0, 2048, 0x2000, 0x2100, 8, 128, 0, 0, FLASH,  EEPROM},
     {s_pic16f628a, 0x1060, 2048, 0x2000, 0x2100, 8, 128, 0, 0, FLASH4, EEPROM},
     {s_pic16f648a, 0x1100, 4096, 0x2000, 0x2100, 8, 256, 0, 0, FLASH4, EEPROM},
+
+    // http://ww1.microchip.com/downloads/en/DeviceDoc/41287D.pdf
+    {s_pic16f882,  0x2000, 2048, 0x2000, 0x2100, 9, 128, 0, 0, FLASH4, EEPROM},
+    {s_pic16f883,  0x2020, 4096, 0x2000, 0x2100, 9, 256, 0, 0, FLASH4, EEPROM},
+    {s_pic16f884,  0x2040, 4096, 0x2000, 0x2100, 9, 256, 0, 0, FLASH4, EEPROM},
+    {s_pic16f886,  0x2060, 8192, 0x2000, 0x2100, 9, 256, 0, 0, FLASH4, EEPROM},
+    {s_pic16f887,  0x2080, 8192, 0x2000, 0x2100, 9, 256, 0, 0, FLASH4, EEPROM},
 
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
