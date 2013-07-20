@@ -82,11 +82,25 @@ MAX629</h1>
 <div class="image">
 <img src="power_supply_max629.png" alt="power_supply_max629.png"/>
 </div>
-<p>This MAX629 can output up to 28V, so use a multimeter on the output and adjust the 220K trimpot for 13V before connecting it to the rest of the PIC programmer circuit. According to the datasheet, a MBR0530L diode can be used in place of the 1N5819 diode. </p>
-</div></div><!-- contents -->
+<p>This MAX629 can output up to 28V, so use a multimeter on the output and adjust the 220K trimpot for 13V before connecting it to the rest of the PIC programmer circuit. According to the datasheet, a MBR0530L diode can be used in place of the 1N5819 diode.</p>
+<h1><a class="anchor" id="mc34063_power_supply"></a>
+MC34063/NJM2360</h1>
+<p><a href="#" onclick="location.href='mai'+'lto:'+'dot'+'so'+'ft@'+'gm'+'ail'+'.c'+'om'; return false;">Valter Fukuoka</a> contributed another 5V-powered circuit based on a MC34063 DC-to-DC Converter (or the equivalent part NJM2360):</p>
+<div class="image">
+<img src="power_supply_mc34063.png" alt="power_supply_mc34063.png"/>
+</div>
+<p>For finer control of the output voltage, R1 can be replaced with two resistors and a trimpot in series to exactly select the desired VPP value:</p>
+<div class="image">
+<img src="power_supply_mc34063_adjustable.png" alt="power_supply_mc34063_adjustable.png"/>
+</div>
+<p>The following breadboard layout was created by Valter which shows the position of the components, including the adjustment trimpot:</p>
+<div class="image">
+<img src="power_supply_mc34063_breadboard.jpg" alt="power_supply_mc34063_breadboard.jpg"/>
+</div>
+ </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Jul 6 2013 09:02:05 for Ardpicprog by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Jul 20 2013 14:30:05 for Ardpicprog by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.1.2
 </small></address>
