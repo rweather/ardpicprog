@@ -29,4 +29,22 @@ adjust the 220K trimpot for 13V before connecting it to the rest of the PIC
 programmer circuit.  According to the datasheet, a MBR0530L diode can be
 used in place of the 1N5819 diode.
 
+\section mc34063_power_supply MC34063/NJM2360
+
+<a href="mailto:dotsoft@gmail.com">Valter Fukuoka</a> contributed another
+5V-powered circuit based on a MC34063 DC-to-DC Converter (or the equivalent
+part NJM2360):
+
+\image html power_supply_mc34063.png
+
+For finer control of the output voltage, R1 can be replaced with two
+resistors and a trimpot in series to exactly select the desired VPP value:
+
+\image html power_supply_mc34063_adjustable.png
+
+The following breadboard layout was created by Valter which shows the
+position of the components, including the adjustment trimpot:
+
+\image html power_supply_mc34063_breadboard.jpg
+
 */

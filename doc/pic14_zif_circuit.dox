@@ -42,9 +42,11 @@ top of an Arduino Uno compatible main board:
 
 \section zif_power_supply 13 volt power supply
 
-This section describes a specific kind of 13 volt power supply that
-has been tested by the author.  Community members have contributed
-alternative designs that may also work.  See \ref alternative_vpp_circuits "this page"
+This section describes a very simple 13 volt power supply based on a common
+7812 voltage regulator that has been tested by the author.  Community members
+have contributed designs for DC-to-DC step up converters that may also work
+that are driven by the Arduino's 5V rail.  See the page on
+\ref alternative_vpp_circuits "alternative 13 volt power supplies"
 for more information.
 
 We start with the power supply for the 13 volt programming voltage (VPP).
@@ -101,12 +103,14 @@ secured inside the plug housing:
 \image html power_supply_batteries.jpg
 
 This design is not the only way that 13 volts could be generated, but it
-is one of the simplest.  A booster circuit or charge pump could be used
-instead to convert the Arduino's 5 volt supply into 13 volts, but you
-will need to be careful of current draw.  The main reason for the two-board
-design for the PIC programmer was to provide some flexibility in
-VPP generation.  If you come up with a better method, then swap out the
-bottom board and you're good to go.
+is one of the simplest.  See the page on
+\ref alternative_vpp_circuits "alternative 13 volt power supplies"
+for 5V to 13V DC-to-DC step up converter designs that have been
+contributed by community members.
+
+The main reason for the two-board design for the PIC programmer was to
+provide some flexibility in VPP generation.  If you come up with a
+better method, then swap out the bottom board and you're good to go.
 
 \section zif_main_board Main programmer circuit board
 
