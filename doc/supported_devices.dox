@@ -67,25 +67,11 @@ will be necessary.
   <td> </td>
 </tr>
 <tr>
-  <td>pic12f630</td>
-  <td>Autodetected</td>
-  <td>ZIF, 8-pin</td>
-  <td>\ref programpic_sketch "ProgramPIC"</td>
-  <td> </td>
-</tr>
-<tr>
   <td>pic12f675</td>
   <td>Autodetected</td>
   <td>ZIF, 8-pin</td>
   <td>\ref programpic_sketch "ProgramPIC"</td>
   <td>Personally tested by author</td>
-</tr>
-<tr>
-  <td>pic12f676</td>
-  <td>Autodetected</td>
-  <td>ZIF, 8-pin</td>
-  <td>\ref programpic_sketch "ProgramPIC"</td>
-  <td> </td>
 </tr>
 <tr>
   <td>pic16f84</td>
@@ -144,9 +130,23 @@ will be necessary.
   <td>Personally tested by author</td>
 </tr>
 <tr>
+  <td>pic16f630</td>
+  <td>Autodetected</td>
+  <td>ZIF, 8-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
+  <td> </td>
+</tr>
+<tr>
   <td>pic16f648a</td>
   <td>Autodetected</td>
   <td>ZIF, 18-pin</td>
+  <td>\ref programpic_sketch "ProgramPIC"</td>
+  <td> </td>
+</tr>
+<tr>
+  <td>pic16f676</td>
+  <td>Autodetected</td>
+  <td>ZIF, 8-pin</td>
   <td>\ref programpic_sketch "ProgramPIC"</td>
   <td> </td>
 </tr>
