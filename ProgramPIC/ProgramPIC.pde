@@ -42,6 +42,8 @@
 #define DELAY_TPROG5    1000    // Time for program write on FLASH5 systems
 #define DELAY_TFULLERA  50000   // Time for a full chip erase
 #define DELAY_TFULL84   20000   // Intermediate wait for PIC16F84/PIC16F84A
+#define DELAY_TPROG_45  2000    // Programming cycle for PIC16F716
+#define DELAY_TDIS      100     // Time delay to next command for PIC16F716
 
 // Commands that may be sent to the device.
 #define CMD_LOAD_CONFIG         0x00    // Load (write) to config memory
@@ -56,6 +58,7 @@
 #define CMD_BULK_ERASE_PROGRAM  0x09    // Bulk erase program memory
 #define CMD_BULK_ERASE_DATA     0x0B    // Bulk erase data memory
 #define CMD_CHIP_ERASE          0x1F    // Erase the entire chip
+#define CMD_END_PROGRAM_45      0x0E    // 16f716 end programming command
 
 // States this application may be in.
 #define STATE_IDLE      0       // Idle, device is held in the reset state
@@ -68,6 +71,7 @@ int state = STATE_IDLE;
 #define FLASH           1
 #define FLASH4          4
 #define FLASH5          5
+#define FLASH4_5        6
 
 unsigned long pc = 0;           // Current program counter.
 
@@ -98,6 +102,7 @@ const char s_pic16f627a[] PROGMEM = "pic16f627a";
 const char s_pic16f628[]  PROGMEM = "pic16f628";
 const char s_pic16f628a[] PROGMEM = "pic16f628a";
 const char s_pic16f648a[] PROGMEM = "pic16f648a";
+const char s_pic16f716[]  PROGMEM = "pic16f716";
 const char s_pic16f882[]  PROGMEM = "pic16f882";
 const char s_pic16f883[]  PROGMEM = "pic16f883";
 const char s_pic16f884[]  PROGMEM = "pic16f884";
@@ -144,6 +149,9 @@ struct deviceInfo const devices[] PROGMEM = {
     {s_pic16f628,  0x07C0, 2048, 0x2000, 0x2100, 8, 128, 0, 0, FLASH,  EEPROM},
     {s_pic16f628a, 0x1060, 2048, 0x2000, 0x2100, 8, 128, 0, 0, FLASH4, EEPROM},
     {s_pic16f648a, 0x1100, 4096, 0x2000, 0x2100, 8, 256, 0, 0, FLASH4, EEPROM},
+
+    // http://ww1.microchip.com/downloads/en/DeviceDoc/40245b.pdf
+    {s_pic16f716,  0x1140, 2048, 0x2000, 0x2100, 8,   0, 0, 0, FLASH4_5, EEPROM}, //no data (eeprom) memory
 
     // http://ww1.microchip.com/downloads/en/DeviceDoc/41287D.pdf
     {s_pic16f882,  0x2000, 2048, 0x2000, 0x2100, 9, 128, 0, 0, FLASH4, EEPROM},
@@ -269,7 +277,12 @@ void initDevice(const struct deviceInfo *dev)
     configStart = pgm_read_dword(&(dev->configStart));
     configEnd = configStart + pgm_read_word(&(dev->configSize)) - 1;
     dataStart = pgm_read_dword(&(dev->dataStart));
-    dataEnd = dataStart + pgm_read_word(&(dev->dataSize)) - 1;
+    int dataSize = pgm_read_word(&(dev->dataSize));
+    if(dataSize == 0) {
+        dataEnd = dataStart;
+    } else {
+        dataEnd = dataStart + pgm_read_word(&(dev->dataSize)) - 1;
+    }
     reservedStart = programEnd - pgm_read_word(&(dev->reservedWords)) + 1;
     reservedEnd = programEnd;
     configSave = pgm_read_word(&(dev->configSave));
@@ -846,6 +859,11 @@ void cmdErase(const char *args)
         delayMicroseconds(DELAY_TERA);
         sendSimpleCommand(CMD_BULK_ERASE_DATA);
         break;
+    case FLASH4_5:
+        setErasePC();
+        sendSimpleCommand(CMD_BULK_ERASE_PROGRAM);
+        delayMicroseconds(DELAY_TERA);
+        break;
     case FLASH5:
         setErasePC();
         sendSimpleCommand(CMD_CHIP_ERASE);
@@ -1093,10 +1111,17 @@ void enterProgramMode()
     pinMode(PIN_CLOCK, OUTPUT);
 
     // Raise MCLR, then VDD.
-    digitalWrite(PIN_MCLR, MCLR_VPP);
-    delayMicroseconds(DELAY_TPPDP);
-    digitalWrite(PIN_VDD, HIGH);
-    delayMicroseconds(DELAY_THLD0);
+    if(progFlashType == FLASH4_5 || dataStart == dataEnd) { //pic16f716
+        digitalWrite(PIN_VDD, HIGH);
+        delayMicroseconds(DELAY_THLD0);
+        digitalWrite(PIN_MCLR, MCLR_VPP);
+        delayMicroseconds(DELAY_TPPDP);
+    } else {
+        digitalWrite(PIN_MCLR, MCLR_VPP);
+        delayMicroseconds(DELAY_TPPDP);
+        digitalWrite(PIN_VDD, HIGH);
+        delayMicroseconds(DELAY_THLD0);
+    }
 
     // Now in program mode, starting at the first word of program memory.
     state = STATE_PROGRAM;
@@ -1301,6 +1326,12 @@ void beginProgramCycle(unsigned long addr, bool isData)
     case FLASH4:
         sendSimpleCommand(CMD_BEGIN_PROGRAM);
         delayMicroseconds(DELAY_TPROG);
+        break;
+    case FLASH4_5:
+        sendSimpleCommand(CMD_BEGIN_PROGRAM_ONLY);
+        delayMicroseconds(DELAY_TPROG_45);
+        sendSimpleCommand(CMD_END_PROGRAM_45);
+        delayMicroseconds(DELAY_TDIS);
         break;
     case FLASH5:
         sendSimpleCommand(CMD_BEGIN_PROGRAM_ONLY);
