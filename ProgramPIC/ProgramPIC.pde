@@ -18,6 +18,15 @@
 #define __PROG_TYPES_COMPAT__
 #include <avr/pgmspace.h>       // For PROGMEM
 
+// Newer versions of pgmspace.h don't have these definitions any more.
+typedef char prog_char;
+typedef int8_t prog_int8_t;
+typedef uint8_t prog_uint8_t;
+typedef int16_t prog_int16_t;
+typedef uint16_t prog_uint16_t;
+typedef int32_t prog_int32_t;
+typedef uint32_t prog_uint32_t;
+
 // Pin mappings for the PIC programming shield.
 #define PIN_MCLR        A1      // 0: MCLR is VPP voltage, 1: Reset PIC
 #define PIN_ACTIVITY    A5      // LED that indicates read/write activity
