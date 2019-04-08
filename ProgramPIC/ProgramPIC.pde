@@ -36,6 +36,19 @@ typedef uint32_t prog_uint32_t;
 
 #define MCLR_RESET      HIGH    // PIN_MCLR state to reset the PIC
 #define MCLR_VPP        LOW     // PIN_MCLR state to apply 13v to MCLR/VPP pin
+#define VDD_OFF         LOW     // PIN_VDD state to lower target VDD
+#define VDD_ON          HIGH    // PIN_VDD state to raise target VDD
+
+#define LOWER_VPP() { digitalWrite(PIN_MCLR, MCLR_RESET); }
+#define RAISE_VPP() { digitalWrite(PIN_MCLR, MCLR_VPP); }
+#define LOWER_VDD() { digitalWrite(PIN_VDD, VDD_OFF); }
+#define RAISE_VDD() { digitalWrite(PIN_VDD, VDD_ON); }
+
+// The default is true, but false is reportedly necessary for some devices, and
+// for some other devices if the CP bit is enabled. Meanwhile, a device with an
+// enabled internal oscillator may be trickier to program Vdd-first. If one
+// doesn't work, why not try the other?
+#define VPP_BEFORE_VDD  true
 
 // All delays are in microseconds.
 #define DELAY_SETTLE    50      // Delay for lines to settle for reset
@@ -180,8 +193,8 @@ void setup()
     // Hold the PIC in the powered down/reset state until we are ready for it.
     pinMode(PIN_MCLR, OUTPUT);
     pinMode(PIN_VDD, OUTPUT);
-    digitalWrite(PIN_MCLR, MCLR_RESET);
-    digitalWrite(PIN_VDD, LOW);
+    LOWER_VPP();
+    LOWER_VDD();
 
     // Clock and data are floating until the first PIC command.
     pinMode(PIN_CLOCK, INPUT);
@@ -1089,8 +1102,8 @@ void enterProgramMode()
 
     // Lower MCLR, VDD, DATA, and CLOCK initially.  This will put the
     // PIC into the powered-off, reset state just in case.
-    digitalWrite(PIN_MCLR, MCLR_RESET);
-    digitalWrite(PIN_VDD, LOW);
+    LOWER_VPP();
+    LOWER_VDD();
     digitalWrite(PIN_DATA, LOW);
     digitalWrite(PIN_CLOCK, LOW);
 
@@ -1101,12 +1114,21 @@ void enterProgramMode()
     pinMode(PIN_DATA, OUTPUT);
     pinMode(PIN_CLOCK, OUTPUT);
 
-    // Raise MCLR, then VDD.
-    digitalWrite(PIN_MCLR, MCLR_VPP);
-    delayMicroseconds(DELAY_TPPDP);
-    digitalWrite(PIN_VDD, HIGH);
-    delayMicroseconds(DELAY_THLD0);
-
+    if (VPP_BEFORE_VDD) {
+      // Raise MCLR, then VDD.
+      RAISE_VPP();
+      delayMicroseconds(DELAY_TPPDP);
+      RAISE_VDD();
+      delayMicroseconds(DELAY_THLD0);
+    }
+    else {
+      // Raise VDD, then MCLR.
+      RAISE_VDD();
+      delayMicroseconds(DELAY_THLD0);
+      RAISE_VPP();
+      delayMicroseconds(DELAY_TPPDP);
+    }
+    
     // Now in program mode, starting at the first word of program memory.
     state = STATE_PROGRAM;
     pc = 0;
@@ -1120,8 +1142,8 @@ void exitProgramMode()
         return;
 
     // Lower MCLR, VDD, DATA, and CLOCK.
-    digitalWrite(PIN_MCLR, MCLR_RESET);
-    digitalWrite(PIN_VDD, LOW);
+    LOWER_VPP();
+    LOWER_VDD();
     digitalWrite(PIN_DATA, LOW);
     digitalWrite(PIN_CLOCK, LOW);
 
