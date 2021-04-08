@@ -16,14 +16,14 @@ PIC16F628A and friends.  The solution has three parts:
   implements the serial protocol and controls the PIC programming
   process on the computer side.
 
-See the [documentation](http://rweather.github.com/ardpicprog/)
+See the [documentation](http://rweather.github.io/ardpicprog/)
 for more information on the project.
 
 ## Obtaining ardpicprog
 
 The sources for Plang are available from the project
 [git repository](https://github.com/rweather/ardpicprog).  Then read the
-[installation instructions](http://rweather.github.com/ardpicprog/installation.html).
+[installation instructions](http://rweather.github.io/ardpicprog/installation.html).
 
 ## Contact
 
